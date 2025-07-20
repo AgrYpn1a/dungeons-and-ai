@@ -9,9 +9,12 @@ public class Tile extends Entity {
     public Tile(TextureRegion texture, Vector2 position) {
         super();
 
-        // this.texture = texture;
         this.transform.setPosition(position);
-
         this.AddComponent(new RenderComponent(texture));
+    }
+
+    @Override
+    public String toString() {
+        return "Tile at (" + this.transform.getPosition().x +  ", " + this.transform.getPosition().y + ")";
     }
 }

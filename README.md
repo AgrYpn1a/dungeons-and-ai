@@ -1,4 +1,51 @@
-# DungeonsAndAI
+# Dungeons and AI
+
+## Project tools and versions
+The output of `java --version` below:
+```
+openjdk 21.0.7 2025-04-15
+OpenJDK Runtime Environment Homebrew (build 21.0.7)
+OpenJDK 64-Bit Server VM Homebrew (build 21.0.7, mixed mode, sharing)
+```
+
+You may use
+```
+./gradlew eclipse
+```
+to generate project files for Eclipse or Emacs (if you're using eglot) and here's minimal config that works for me in Doom Emacs:
+```elisp
+;; Java
+(use-package eglot-java
+  :ensure t
+  :hook (java-mode . eglot-java-mode))
+
+(add-hook 'java-mode-hook 'eglot-java-mode)
+(with-eval-after-load 'eglot-java
+  (define-key eglot-java-mode-map (kbd "C-c l n") #'eglot-java-file-new)
+  (define-key eglot-java-mode-map (kbd "C-c l x") #'eglot-java-run-main)
+  (define-key eglot-java-mode-map (kbd "C-c l t") #'eglot-java-run-test)
+  (define-key eglot-java-mode-map (kbd "C-c l N") #'eglot-java-project-new)
+  (define-key eglot-java-mode-map (kbd "C-c l T") #'eglot-java-project-build-task)
+  (define-key eglot-java-mode-map (kbd "C-c l R") #'eglot-java-project-build-refresh))
+
+(setq eglot-events-buffer-size 2000000)
+(setq eglot-connect-timeout 120)
+(setq eglot-java-debug t)
+```
+
+The [eglot-java](https://github.com/yveszoundi/eglot-java) relies on Eclipse JDT Language Server.
+
+This project uses `gradle` build system and is desktop only.
+
+## How to run the project
+You may run the project from CLI from the root directory by executing:
+```
+./gradlew lwjgl3:run
+```
+
+-----
+
+# LibGDX default README below
 
 A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
 

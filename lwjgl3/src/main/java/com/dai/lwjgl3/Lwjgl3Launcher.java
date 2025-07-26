@@ -5,15 +5,19 @@ import java.util.Arrays;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.dai.DAIGame;
+import com.dai.DAIServer;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
 
         if(Arrays.asList(args).contains("--server")) {
-            System.out.println("TODO: Should start dedicated server.");
-            while(true) {
-                // Server running ...
+            try {
+                DAIServer server = new DAIServer();
+                server.run();
+            } catch(Exception e) {
+                // TODO: Maybe handle this in a better way
+                e.printStackTrace();
             }
         } else {
             if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.

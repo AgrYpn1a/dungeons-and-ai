@@ -1,25 +1,33 @@
 package com.dai;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.graphics.Texture;
 import com.dai.Player.PlayerData;
+import com.dai.network.NetworkListener;
+import com.dai.network.NetworkListener.NetworkData;
 import com.dai.server.EDAIProtocol;
-import com.dai.server.ServerConnection;
+import com.dai.world.World;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class DAIGame extends Game {
     Socket ss;
     Player player;
-    ServerConnection serverConnection;
+    NetworkListener listener;
+
     ObjectOutputStream out;
+    ObjectInputStream in;
+
+    Queue<NetworkData> messageQueue;
 
     private static final Logger logger = LoggerFactory.getLogger(DAIGame.class);
 
@@ -27,28 +35,26 @@ public class DAIGame extends Game {
     public void create() {
 
         try {
-            /** Connect to the server */
+            // Connect to the server
             ss = new Socket("localhost", DAIServer.PORT);
 
             out = new ObjectOutputStream (ss.getOutputStream());
-            serverConnection = new ServerConnection(out);
-
-            /** Init player */
-            PlayerData data = new PlayerData();
-            data.name = "Player " + Math.round(Math.random() * 1000);
-            player = new Player(data);
-
-            out.writeObject(EDAIProtocol.PlayerConnect.name());
-            out.writeObject(data);
+            in = new ObjectInputStream(ss.getInputStream());
+            messageQueue = new ConcurrentLinkedQueue<>();
 
             /** Let the connection run in the background */
-            serverConnection.setDaemon(true);
-            serverConnection.start();
+            listener = new NetworkListener(in, messageQueue);
+            listener.setDaemon(true);
+            listener.start();
+
         } catch(IOException e) {
             e.printStackTrace();
         } finally {
             // try { ss.close(); } catch(Exception e) {}
         }
+
+        /** Initialize managers */
+        TextureManager.getInstance().setTexture(new Texture("tileset.png"));
 
         /** Init the libgdx game screen */
         setScreen(new GameScreen());
@@ -59,10 +65,37 @@ public class DAIGame extends Game {
         try {
             logger.info("Closing streams.");
             out.close();
+            in.close();
             ss.close();
-            serverConnection.interrupt();
+            listener.interrupt();
         } catch(IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void render() {
+        super.render();
+
+        NetworkData message = messageQueue.poll();
+        if(message != null) {
+            handleMessage(message);
+        }
+    }
+
+    private void handleMessage(NetworkData nData) {
+        EDAIProtocol message = nData.type;
+        Object data = nData.data;
+
+        // TODO: Separate enemy spawn logic
+        if(message == EDAIProtocol.SpawnPlayer || message == EDAIProtocol.SpawnEnemy) {
+            PlayerData pData = (PlayerData) data;
+            if(pData != null) {
+                Player player = new Player(pData, pData.spawnPos);
+                World.getInstance().spawn(player, pData.spawnPos);
+            } else {
+                // TODO: Possibly handle wrong message, but should never happen!
+            }
         }
     }
 }

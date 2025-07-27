@@ -1,7 +1,5 @@
 package com.dai;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -21,7 +19,6 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dai.engine.Entity;
 import com.dai.engine.RenderComponent;
-import com.dai.world.Tile;
 import com.dai.world.World;
 
 /** First screen of the application. Displayed after the application is created. */
@@ -86,39 +83,16 @@ public class GameScreen implements Screen {
         .forEach(e -> {
             Optional<RenderComponent> r = e.getComponent(RenderComponent.id);
             if(r.get() != null) {
+                Vector2 worldPos = World.toWorldPos(e.getTransform().getPosition());
                 batch.draw(
                     r.get().getTexture(),
-                    e.getTransform().getPosition().x,
-                    e.getTransform().getPosition().y
+                    worldPos.x,
+                    worldPos.y
                 );
             }
         });
 
-        /* TODO: Render more... */
-        // ...
-
-
-        List<Entity> entities = new ArrayList<>();
-        entities.add(new Tile(region, new Vector2(8, -50)));
-        entities.add(new Tile(region, new Vector2(2*8, -50)));
-        entities.add(new Tile(region, new Vector2(3*8, -50)));
-        entities.add(new Tile(region, new Vector2(8, -66)));
-        entities.add(new Tile(region, new Vector2(2*8, -66)));
-        entities.add(new Tile(region, new Vector2(3*8, -66)));
-
-        for (Entity entity : entities) {
-            Optional<RenderComponent> renderer = entity.getComponent(RenderComponent.id);
-            if(renderer.get()!= null) {
-                batch.draw(
-                        renderer.get().getTexture(),
-                        entity.getTransform().getPosition().x,
-                        entity.getTransform().getPosition().y);
-            }
-        }
-
-
-        // Draw some text..
-        // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        // Draw some debug text
         uiViewport.apply();
         uiCamera.update();
         batch.setProjectionMatrix(uiCamera.combined);
@@ -145,7 +119,8 @@ public class GameScreen implements Screen {
             viewport.apply();
             camera.update();
             batch.setProjectionMatrix(camera.combined);
-            batch.draw(region, e.getTransform().getPosition().x, e.getTransform().getPosition().y);
+            Vector2 pointerInWorld = World.toWorldPos(new Vector2(e.getTransform().getPosition().x, e.getTransform().getPosition().y));
+            batch.draw(region, pointerInWorld.x, pointerInWorld.y);
         }
 
         batch.end();

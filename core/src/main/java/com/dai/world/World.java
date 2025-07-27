@@ -1,6 +1,11 @@
 package com.dai.world;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import com.badlogic.gdx.graphics.Texture;
@@ -22,7 +27,12 @@ public class World {
     private final TextureRegion textureWallVertical;
     private final TextureRegion textureWallHorizontal;
 
+    private final Map<Vector2, Entity> entities;
+
     private World() {
+        // entities = Collections.synchronizedList(new ArrayList<>(50));
+        entities = new HashMap<>();
+
         this.worldTexture = new Texture("tileset.png");
         this.textureGround = new TextureRegion(
             this.worldTexture,
@@ -86,7 +96,8 @@ public class World {
 
                 this.tiles[y][x] = new Tile(
                     textureGround,
-                    new Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                    // new Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                    new Vector2(x, y)
                 );
             }
         }
@@ -100,10 +111,11 @@ public class World {
         return instance;
     }
 
-    // TODO: If world will have more entities, we will
-    // merge them together here.
     public Stream<Entity> getEntities() {
-        return Arrays.stream(this.tiles).flatMap(Arrays::stream);
+        Stream<Entity> tiles = Arrays.stream(this.tiles).flatMap(Arrays::stream);
+        Stream<Entity> worldEntities = entities.values().stream();
+
+        return Stream.concat(tiles, worldEntities);
     }
 
     public Entity getEntityAtPoint(Vector3 point) {
@@ -115,5 +127,13 @@ public class World {
         }
 
         return tiles[y][x];
+    }
+
+    public synchronized void spawn(Entity e, Vector2 pos) {
+        entities.put(pos, e);
+    }
+
+    public static Vector2 toWorldPos(Vector2 pos) {
+        return new Vector2(pos.x * TILE_SIZE, pos.y * TILE_SIZE);
     }
 }

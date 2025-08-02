@@ -1,8 +1,5 @@
 package com.dai;
 
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -11,17 +8,12 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dai.engine.Engine;
-import com.dai.engine.Entity;
-import com.dai.engine.RenderComponent;
 import com.dai.engine.Engine.Layer;
 import com.dai.world.World;
 
@@ -46,6 +38,8 @@ public class GameScreen implements Screen {
     @Override
     public void show() {
         batch = new SpriteBatch();
+        batch.enableBlending();
+
         img = new Texture("tileset.png");
         region = new TextureRegion(img, 0, 0, 8, 8);
 
@@ -70,46 +64,29 @@ public class GameScreen implements Screen {
 
         engine.registerViewport(Layer.Default, viewport);
         engine.registerViewport(Layer.Player, viewport);
+        engine.registerViewport(Layer.Indicators, viewport);
         engine.registerViewport(Layer.UI, uiViewport);
 
+        UIManager.getInstance().init();
         PlayerController.getInstance().init();
     }
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(1, 0, 0, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // camera.update();
-        // uiCamera.update();
+        // Transparency
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         /** Tick before rendering */
         engine.tick(delta);
 
         /** Rendering */
         batch.begin();
+
         engine.render(delta);
-
-        // batch.setProjectionMatrix(camera.combined);
-
-        // Render world
-        // viewport.apply();
-        // Stream<Entity> worldEntities = World.getInstance().getEntities();
-
-        // worldEntities
-        // .forEach(e -> {
-        //     e.tick(delta);
-
-        //     Optional<RenderComponent> r = e.getComponent(RenderComponent.id);
-        //     if(r.get() != null) {
-        //         Vector2 worldPos = World.toWorldPos(e.getTransform().getPosition());
-        //         batch.draw(
-        //             r.get().getTexture(),
-        //             worldPos.x,
-        //             worldPos.y
-        //         );
-        //     }
-        // });
 
         // Draw some debug text
         uiViewport.apply();
@@ -125,23 +102,14 @@ public class GameScreen implements Screen {
             Align.topLeft,
             false);
 
+        font.draw(
+            batch,
+            "UIManager Mouse at (" + UIManager.getInstance().getMouseWorldPos().x + ", " + UIManager.getInstance().getMouseWorldPos().y + ")",
+            25, Gdx.graphics.getHeight() - 50, 100,
+            Align.topLeft,
+            false);
+
         batch.end();
-
-        // viewport.apply();
-        // batch.setProjectionMatrix(camera.combined);
-
-        // Entity e = World.getInstance().getEntityAtPoint(worldCoords);
-        // if(e != null) {
-        //     font.draw(
-        //         batch,
-        //         e.toString(),
-        //         25, uiViewport.getWorldHeight() - 50, 100,
-        //         Align.topLeft,
-        //         false);
-
-        //     Vector2 pointerInWorld = World.toWorldPos(new Vector2(e.getTransform().getPosition().x, e.getTransform().getPosition().y));
-        //     batch.draw(region, pointerInWorld.x, pointerInWorld.y);
-        // }
     }
 
     @Override
@@ -156,9 +124,6 @@ public class GameScreen implements Screen {
 
         viewport.getCamera().update();
         uiViewport.getCamera().update();
-
-        // batch.setProjectionMatrix(camera.combined);
-        // batch.setProjectionMatrix(uiCamera.combined);
     }
 
     @Override

@@ -23,6 +23,8 @@ public abstract class Entity extends Transform2D implements ITickable {
         // We use ArrayList for faster access to the memory
         this.components = new ArrayList<IComponent>();
         this.transform = this;
+
+        this.registerEntity();
     }
 
     /** Override this method, in order to change rendering layer */
@@ -71,4 +73,6 @@ public abstract class Entity extends Transform2D implements ITickable {
     public void tick(float deltaTime) {}
 
     public void render(SpriteBatch batch, float deltaTime) {}
+
+    public boolean shouldRender() { return true; }
 }

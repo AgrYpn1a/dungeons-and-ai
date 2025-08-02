@@ -33,10 +33,11 @@ public final class Engine {
     public enum Layer {
         Default,
         Player,
+        Indicators,
         UI
     }
 
-    private final Map<Layer, Viewport> layerViewports;
+    private final Map<Layer, Optional<Viewport>> layerViewports;
     private final Map<Layer, ArrayList<Entity>> layerEntities;
 
     private ArrayList<ITickable> tickables;
@@ -44,6 +45,7 @@ public final class Engine {
     private Layer[] layers = new Layer[] {
         Layer.Default,
         Layer.Player,
+        Layer.Indicators,
         Layer.UI
     };
 
@@ -68,12 +70,12 @@ public final class Engine {
     public void render(float dt) {
         for(int i=0; i<layers.length; i++) {
             Layer layer = layers[i];
-            Viewport viewport = layerViewports.get(layer);
+            Optional<Viewport> viewport = layerViewports.get(layer);
             List<Entity> entities = layerEntities.get(layer);
 
-            if(viewport != null && entities.size() > 0) {
-                viewport.apply();
-                mainBatch.setProjectionMatrix(viewport.getCamera().combined);
+            if(viewport.get() != null && entities.size() > 0) {
+                viewport.get().apply();
+                mainBatch.setProjectionMatrix(viewport.get().getCamera().combined);
 
                 for(int j=0; j<entities.size(); j++) {
                     entities.get(j).render(mainBatch, dt);
@@ -90,7 +92,7 @@ public final class Engine {
     }
 
     public void registerViewport(Layer layer, Viewport viewport) {
-        layerViewports.put(layer, viewport);
+        layerViewports.put(layer, Optional.of(viewport));
     }
 
     public void registerEntity(Layer layer, Entity entity) {
@@ -100,5 +102,9 @@ public final class Engine {
 
     public void registerTickable(ITickable t) {
         tickables.add(t);
+    }
+
+    public Optional<Viewport> getLayerViewport(Layer layer) {
+        return layerViewports.get(layer);
     }
 }

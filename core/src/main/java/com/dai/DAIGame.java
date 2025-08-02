@@ -67,7 +67,8 @@ public class DAIGame extends Game {
         }
 
         /** Initialize managers */
-        TextureManager.getInstance().setTexture(new Texture("tileset.png"));
+        // TextureManager.getInstance().setTexture(new Texture("tileset.png"));
+        TextureManager.getInstance().setTexture(new Texture("selenasdungeon32x32.png"));
 
         /** Init the libgdx game screen */
         setScreen(new GameScreen());

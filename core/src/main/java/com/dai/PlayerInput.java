@@ -32,19 +32,22 @@ public final class PlayerInput implements InputProcessor {
 	@Override
 	public boolean keyDown(int keycode) {
 		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'keyDown'");
+		// throw new UnsupportedOperationException("Unimplemented method 'keyDown'");
+		return true;
 	}
 
 	@Override
 	public boolean keyUp(int keycode) {
 		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'keyUp'");
+		// throw new UnsupportedOperationException("Unimplemented method 'keyUp'");
+		return true;
 	}
 
 	@Override
 	public boolean keyTyped(char character) {
 		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'keyTyped'");
+		// throw new UnsupportedOperationException("Unimplemented method 'keyTyped'");
+		return true;
 	}
 
 	@Override

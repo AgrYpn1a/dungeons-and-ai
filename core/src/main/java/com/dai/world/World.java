@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.dai.TextureManager;
 import com.dai.engine.Engine;
 import com.dai.engine.Entity;
 import com.dai.engine.Engine.Layer;
@@ -19,45 +20,42 @@ import com.dai.engine.Engine.Layer;
 public class World {
 
     public static final int WORLD_SIZE = 32;
-    public static final int TILE_SIZE = 8;
-    public static final float CAMERA_ZOOM = 0.3f;
+    // public static final int TILE_SIZE = 8;
+    public static final int TILE_SIZE = 32;
+    public static final float CAMERA_ZOOM = 1.5f;
 
     public static World instance;
     private Tile[][] tiles;
 
-    private final Texture worldTexture;
-    private final TextureRegion textureGround;
-    private final TextureRegion textureWallVertical;
-    private final TextureRegion textureWallHorizontal;
+    // private final TextureRegion textureGround;
+    // private final TextureRegion textureWallVertical;
+    // private final TextureRegion textureWallHorizontal;
 
     private final Map<Vector2, Entity> entities;
 
     private World() {
-        // entities = Collections.synchronizedList(new ArrayList<>(50));
         entities = new HashMap<>();
-
-        this.worldTexture = new Texture("tileset.png");
-        this.textureGround = new TextureRegion(
-            this.worldTexture,
-            3*TILE_SIZE,
-            6*TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE
-        );
-        this.textureWallHorizontal = new TextureRegion(
-            this.worldTexture,
-            4*TILE_SIZE,
-            4*TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE
-        );
-        this.textureWallVertical = new TextureRegion(
-            this.worldTexture,
-            4*TILE_SIZE,
-            5*TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE
-        );
+        // this.textureGround = new TextureRegion(
+        //     TextureManager.getInstance().getGroundTile(),
+        //     3*TILE_SIZE,
+        //     6*TILE_SIZE,
+        //     TILE_SIZE,
+        //     TILE_SIZE
+        // );
+        // this.textureWallHorizontal = new TextureRegion(
+        //     TextureManager.getInstance().getGroundTile(),
+        //     4*TILE_SIZE,
+        //     4*TILE_SIZE,
+        //     TILE_SIZE,
+        //     TILE_SIZE
+        // );
+        // this.textureWallVertical = new TextureRegion(
+        //     TextureManager.getInstance().getGroundTile(),
+        //     4*TILE_SIZE,
+        //     5*TILE_SIZE,
+        //     TILE_SIZE,
+        //     TILE_SIZE
+        // );
 
         this.tiles = new Tile[WORLD_SIZE][WORLD_SIZE];
         for(int y=0; y<WORLD_SIZE; y++) {
@@ -98,11 +96,9 @@ public class World {
                 // }
 
                 this.tiles[y][x] = new Tile(
-                    textureGround,
-                    // new Vector2(x * TILE_SIZE, y * TILE_SIZE)
+                    TextureManager.getInstance().getGroundTile(),
                     new Vector2(x, y)
                 );
-                Engine.getInstance().registerEntity(Layer.Default, this.tiles[y][x]);
             }
         }
     }
@@ -123,10 +119,8 @@ public class World {
     }
 
     public Entity getEntityAtPoint(Vector3 point) {
-        // int x = Math.round((point.x - TILE_SIZE / 2) / TILE_SIZE);
-        // int y = Math.round((point.y - TILE_SIZE / 2) / TILE_SIZE);
-
         Vector2 gridPos = toGridPos(point);
+
         int x = (int)gridPos.x;
         int y = (int)gridPos.y;
 
@@ -139,7 +133,6 @@ public class World {
 
     public synchronized void spawn(Entity e, Vector2 pos) {
         entities.put(pos, e);
-        Engine.getInstance().registerEntity(Layer.Player, e);
     }
 
     public static Vector2 toWorldPos(Vector2 pos) {

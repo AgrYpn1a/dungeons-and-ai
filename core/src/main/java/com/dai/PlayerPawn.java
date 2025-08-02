@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.dai.engine.Entity;
 import com.dai.engine.RenderComponent;
+import com.dai.engine.Engine;
+import com.dai.engine.Engine.Layer;
 import com.dai.world.World;
 
 public final class PlayerPawn extends Entity {
@@ -30,6 +32,11 @@ public final class PlayerPawn extends Entity {
         this.setPosition(pos);
         this.AddComponent(new RenderComponent(
             TextureManager.getInstance().getPlayerTexture()));
+    }
+
+    @Override
+    public void registerEntity() {
+        Engine.getInstance().registerEntity(Layer.Player, this);
     }
 
     public int getId() { return this.id; }

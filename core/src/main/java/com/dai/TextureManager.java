@@ -21,11 +21,28 @@ public final class TextureManager {
         this.texture = texture;
     }
 
+    public TextureRegion getGroundTile() {
+        return new TextureRegion(texture, 0, 1 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
+    }
+
     public TextureRegion getPlayerTexture() {
-        return new TextureRegion(texture, 0, 2 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
+        // return new TextureRegion(texture, 0, 2 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
+        return new TextureRegion(texture, 0, 0, World.TILE_SIZE, World.TILE_SIZE);
     }
 
     public TextureRegion getEnemyTexture() {
-        return new TextureRegion(texture, 1 * World.TILE_SIZE, 2 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
+        // return new TextureRegion(texture, 1 * World.TILE_SIZE, 2 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
+        return new TextureRegion(texture, 0, 1 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
     }
+
+    public TextureRegion getIndicator() {
+        return new TextureRegion(texture, 0, 2 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
+    }
+
+
+    // TODO:
+
+    // public TextureRegion getMoveIndicator() {}
+
+    // public TextureRegion getAttackIndicator() {}
 }

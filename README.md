@@ -45,7 +45,7 @@ You may run the project from CLI from the root directory by executing:
 
 In order to run multiplayer first run the server:
 ```
-./gradlew lwjgl3:run --args="--offline"
+./gradlew lwjgl3:run --args="--server"
 ```
 
 Then run two clients with:

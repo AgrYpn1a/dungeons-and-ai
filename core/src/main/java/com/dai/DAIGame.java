@@ -12,7 +12,8 @@ import org.slf4j.Logger;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.Texture;
-import com.dai.Player.PlayerData;
+import com.badlogic.gdx.math.Vector2;
+import com.dai.PlayerPawn.PlayerData;
 import com.dai.network.NetworkListener;
 import com.dai.network.NetworkListener.NetworkData;
 import com.dai.server.EDAIProtocol;
@@ -21,7 +22,7 @@ import com.dai.world.World;
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class DAIGame extends Game {
     Socket ss;
-    Player player;
+    PlayerPawn player;
     NetworkListener listener;
 
     ObjectOutputStream out;
@@ -31,26 +32,38 @@ public class DAIGame extends Game {
 
     private static final Logger logger = LoggerFactory.getLogger(DAIGame.class);
 
+    private boolean isOfflineMode;
+
+    public DAIGame(boolean isOfflineMode) {
+        super();
+
+        this.isOfflineMode = isOfflineMode;
+    }
+
+    public boolean getIsOfflineMode() { return isOfflineMode; }
+
     @Override
     public void create() {
 
-        try {
-            // Connect to the server
-            ss = new Socket("localhost", DAIServer.PORT);
+        if(!isOfflineMode) {
+            try {
+                // Connect to the server
+                ss = new Socket("localhost", DAIServer.PORT);
 
-            out = new ObjectOutputStream (ss.getOutputStream());
-            in = new ObjectInputStream(ss.getInputStream());
-            messageQueue = new ConcurrentLinkedQueue<>();
+                out = new ObjectOutputStream (ss.getOutputStream());
+                in = new ObjectInputStream(ss.getInputStream());
+                messageQueue = new ConcurrentLinkedQueue<>();
 
-            /** Let the connection run in the background */
-            listener = new NetworkListener(in, messageQueue);
-            listener.setDaemon(true);
-            listener.start();
+                /** Let the connection run in the background */
+                listener = new NetworkListener(in, messageQueue);
+                listener.setDaemon(true);
+                listener.start();
 
-        } catch(IOException e) {
-            e.printStackTrace();
-        } finally {
-            // try { ss.close(); } catch(Exception e) {}
+            } catch(IOException e) {
+                e.printStackTrace();
+            } finally {
+                // try { ss.close(); } catch(Exception e) {}
+            }
         }
 
         /** Initialize managers */
@@ -58,6 +71,12 @@ public class DAIGame extends Game {
 
         /** Init the libgdx game screen */
         setScreen(new GameScreen());
+
+        /** Initialise for offline mode */
+        if(isOfflineMode) {
+            PlayerPawn player = new PlayerPawn(new PlayerData(), new Vector2(0, 0));
+            World.getInstance().spawn(player, new Vector2(0, 0));
+        }
     }
 
     @Override
@@ -77,9 +96,11 @@ public class DAIGame extends Game {
     public void render() {
         super.render();
 
-        NetworkData message = messageQueue.poll();
-        if(message != null) {
-            handleMessage(message);
+        if(!isOfflineMode) {
+            NetworkData message = messageQueue.poll();
+            if(message != null) {
+                handleMessage(message);
+            }
         }
     }
 
@@ -91,7 +112,7 @@ public class DAIGame extends Game {
         if(message == EDAIProtocol.SpawnPlayer || message == EDAIProtocol.SpawnEnemy) {
             PlayerData pData = (PlayerData) data;
             if(pData != null) {
-                Player player = new Player(pData, pData.spawnPos);
+                PlayerPawn player = new PlayerPawn(pData, pData.spawnPos);
                 World.getInstance().spawn(player, pData.spawnPos);
             } else {
                 // TODO: Possibly handle wrong message, but should never happen!

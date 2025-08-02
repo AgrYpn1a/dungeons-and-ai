@@ -14,18 +14,22 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.FillViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.dai.engine.Engine;
 import com.dai.engine.Entity;
 import com.dai.engine.RenderComponent;
+import com.dai.engine.Engine.Layer;
 import com.dai.world.World;
 
 /** First screen of the application. Displayed after the application is created. */
 public class GameScreen implements Screen {
 
-    private static final int SCREEN_WIDTH = 800;
-    private static final int SCREEN_HEIGHT= 600;
+    private static final int SCREEN_WIDTH = 1024;
+    private static final int SCREEN_HEIGHT= 760;
 
     SpriteBatch batch;
     Texture img;
@@ -37,6 +41,7 @@ public class GameScreen implements Screen {
     Viewport uiViewport;
 
     BitmapFont font;
+    Engine engine;
 
     @Override
     public void show() {
@@ -46,22 +51,28 @@ public class GameScreen implements Screen {
 
         camera = new OrthographicCamera();
         uiCamera = new OrthographicCamera();
-        viewport = new ScreenViewport(camera);
-        uiViewport = new StretchViewport(SCREEN_WIDTH, SCREEN_HEIGHT, uiCamera);
 
-        float cameraZoom = 0.3f;
+        viewport = new ScreenViewport(camera);
+        uiViewport = new FitViewport(SCREEN_WIDTH, SCREEN_HEIGHT, uiCamera);
 
         camera.position.set(
             ((World.WORLD_SIZE * World.TILE_SIZE) / 2),
             ((World.WORLD_SIZE * World.TILE_SIZE) / 2),
             0
         );
-        camera.zoom = cameraZoom ;
+        camera.zoom = World.CAMERA_ZOOM;
         camera.update();
         uiCamera.update();
-        uiCamera.setToOrtho(false, 800, 600);;
+        uiCamera.setToOrtho(false, SCREEN_WIDTH, SCREEN_HEIGHT);;
 
         font = new BitmapFont();
+        engine = new Engine(batch);
+
+        engine.registerViewport(Layer.Default, viewport);
+        engine.registerViewport(Layer.Player, viewport);
+        engine.registerViewport(Layer.UI, uiViewport);
+
+        PlayerController.getInstance().init();
     }
 
     @Override
@@ -69,32 +80,39 @@ public class GameScreen implements Screen {
         Gdx.gl.glClearColor(1, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        camera.update();
-        camera.update();
+        // camera.update();
+        // uiCamera.update();
 
-        batch.setProjectionMatrix(camera.combined);
+        /** Tick before rendering */
+        engine.tick(delta);
+
+        /** Rendering */
+        batch.begin();
+        engine.render(delta);
+
+        // batch.setProjectionMatrix(camera.combined);
 
         // Render world
-        viewport.apply();
-        Stream<Entity> worldEntities = World.getInstance().getEntities();
-        batch.begin();
+        // viewport.apply();
+        // Stream<Entity> worldEntities = World.getInstance().getEntities();
 
-        worldEntities
-        .forEach(e -> {
-            Optional<RenderComponent> r = e.getComponent(RenderComponent.id);
-            if(r.get() != null) {
-                Vector2 worldPos = World.toWorldPos(e.getTransform().getPosition());
-                batch.draw(
-                    r.get().getTexture(),
-                    worldPos.x,
-                    worldPos.y
-                );
-            }
-        });
+        // worldEntities
+        // .forEach(e -> {
+        //     e.tick(delta);
+
+        //     Optional<RenderComponent> r = e.getComponent(RenderComponent.id);
+        //     if(r.get() != null) {
+        //         Vector2 worldPos = World.toWorldPos(e.getTransform().getPosition());
+        //         batch.draw(
+        //             r.get().getTexture(),
+        //             worldPos.x,
+        //             worldPos.y
+        //         );
+        //     }
+        // });
 
         // Draw some debug text
         uiViewport.apply();
-        uiCamera.update();
         batch.setProjectionMatrix(uiCamera.combined);
 
         Vector3 screenCoords = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -103,27 +121,27 @@ public class GameScreen implements Screen {
         font.draw(
             batch,
             "Mouse at (" + worldCoords.x + ", " + worldCoords.y + ")",
-            25, uiViewport.getWorldHeight() - 25, 100,
+            25, Gdx.graphics.getHeight() - 25, 100,
             Align.topLeft,
             false);
 
-        Entity e = World.getInstance().getEntityAtPoint(worldCoords);
-        if(e != null) {
-            font.draw(
-                batch,
-                e.toString(),
-                25, uiViewport.getWorldHeight() - 50, 100,
-                Align.topLeft,
-                false);
-
-            viewport.apply();
-            camera.update();
-            batch.setProjectionMatrix(camera.combined);
-            Vector2 pointerInWorld = World.toWorldPos(new Vector2(e.getTransform().getPosition().x, e.getTransform().getPosition().y));
-            batch.draw(region, pointerInWorld.x, pointerInWorld.y);
-        }
-
         batch.end();
+
+        // viewport.apply();
+        // batch.setProjectionMatrix(camera.combined);
+
+        // Entity e = World.getInstance().getEntityAtPoint(worldCoords);
+        // if(e != null) {
+        //     font.draw(
+        //         batch,
+        //         e.toString(),
+        //         25, uiViewport.getWorldHeight() - 50, 100,
+        //         Align.topLeft,
+        //         false);
+
+        //     Vector2 pointerInWorld = World.toWorldPos(new Vector2(e.getTransform().getPosition().x, e.getTransform().getPosition().y));
+        //     batch.draw(region, pointerInWorld.x, pointerInWorld.y);
+        // }
     }
 
     @Override
@@ -135,6 +153,12 @@ public class GameScreen implements Screen {
         // Resize your screen here. The parameters represent the new window size.
         viewport.update(width, height);
         uiViewport.update(width, height);
+
+        viewport.getCamera().update();
+        uiViewport.getCamera().update();
+
+        // batch.setProjectionMatrix(camera.combined);
+        // batch.setProjectionMatrix(uiCamera.combined);
     }
 
     @Override

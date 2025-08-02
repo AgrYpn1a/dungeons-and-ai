@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.math.Vector2;
-import com.dai.Player;
-import com.dai.Player.PlayerData;
+import com.dai.PlayerPawn;
+import com.dai.PlayerPawn.PlayerData;
 import com.dai.world.World;
 
 public final class GameMatch extends Thread {
@@ -26,7 +26,7 @@ public final class GameMatch extends Thread {
 
     private final class MatchPlayer {
         public Socket client;
-        public Player player;
+        public PlayerPawn player;
         public ObjectInputStream in;
         public ObjectOutputStream out;
     }

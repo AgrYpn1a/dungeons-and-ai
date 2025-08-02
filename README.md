@@ -40,8 +40,20 @@ This project uses `gradle` build system and is desktop only.
 ## How to run the project
 You may run the project from CLI from the root directory by executing:
 ```
+./gradlew lwjgl3:run --args="--offline"
+```
+
+In order to run multiplayer first run the server:
+```
+./gradlew lwjgl3:run --args="--offline"
+```
+
+Then run two clients with:
+```
 ./gradlew lwjgl3:run
 ```
+
+Clients should connect to the server and matchmaking should automatically happen. Observe server log for any errors.
 
 -----
 

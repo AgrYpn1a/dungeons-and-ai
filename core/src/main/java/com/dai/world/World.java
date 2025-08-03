@@ -18,13 +18,19 @@ import com.dai.engine.Entity;
 import com.dai.engine.Engine.Layer;
 
 public class World {
+    public static World instance;
+    public static World getInstance() {
+        if(instance == null) {
+            instance = new World();
+        }
 
-    public static final int WORLD_SIZE = 32;
-    // public static final int TILE_SIZE = 8;
+        return instance;
+    }
+
+    public static final int WORLD_SIZE = 16;
     public static final int TILE_SIZE = 32;
     public static final float CAMERA_ZOOM = 1.5f;
 
-    public static World instance;
     private Tile[][] tiles;
 
     // private final TextureRegion textureGround;
@@ -35,66 +41,10 @@ public class World {
 
     private World() {
         entities = new HashMap<>();
-        // this.textureGround = new TextureRegion(
-        //     TextureManager.getInstance().getGroundTile(),
-        //     3*TILE_SIZE,
-        //     6*TILE_SIZE,
-        //     TILE_SIZE,
-        //     TILE_SIZE
-        // );
-        // this.textureWallHorizontal = new TextureRegion(
-        //     TextureManager.getInstance().getGroundTile(),
-        //     4*TILE_SIZE,
-        //     4*TILE_SIZE,
-        //     TILE_SIZE,
-        //     TILE_SIZE
-        // );
-        // this.textureWallVertical = new TextureRegion(
-        //     TextureManager.getInstance().getGroundTile(),
-        //     4*TILE_SIZE,
-        //     5*TILE_SIZE,
-        //     TILE_SIZE,
-        //     TILE_SIZE
-        // );
 
         this.tiles = new Tile[WORLD_SIZE][WORLD_SIZE];
         for(int y=0; y<WORLD_SIZE; y++) {
             for(int x=0; x<WORLD_SIZE; x++) {
-
-                // Top wall
-                // if(y == 0) {
-                //     this.tiles[y][x] = new Tile(
-                //         textureWallHorizontal,
-                //         new Vector2(x * TILE_SIZE, y * TILE_SIZE)
-                //     );
-                //     continue;
-                // }
-
-                // if(y == WORLD_SIZE-1) {
-                //     this.tiles[y][x] = new Tile(
-                //         textureWallHorizontal,
-                //         new Vector2(x * TILE_SIZE, y * TILE_SIZE)
-                //     );
-                //     continue;
-                // }
-
-                // // Side walls
-                // if(x == 0) {
-                //     this.tiles[y][x] = new Tile(
-                //         textureWallVertical,
-                //         new Vector2(x * TILE_SIZE, y * TILE_SIZE)
-                //     );
-                //     continue;
-                // }
-
-                // if(x == WORLD_SIZE-1) {
-                //     this.tiles[y][x] = new Tile(
-                //         textureWallVertical,
-                //         new Vector2(x * TILE_SIZE, y * TILE_SIZE)
-                //     );
-                //     continue;
-                // }
-
                 this.tiles[y][x] = new Tile(
                     TextureManager.getInstance().getGroundTile(),
                     new Vector2(x, y)
@@ -103,13 +53,7 @@ public class World {
         }
     }
 
-    public static World getInstance() {
-        if(instance == null) {
-            instance = new World();
-        }
-
-        return instance;
-    }
+    public void init() {}
 
     public Stream<Entity> getEntities() {
         Stream<Entity> tiles = Arrays.stream(this.tiles).flatMap(Arrays::stream);

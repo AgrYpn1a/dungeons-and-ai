@@ -14,6 +14,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.dai.PlayerPawn.PlayerData;
+import com.dai.engine.Engine;
 import com.dai.network.NetworkListener;
 import com.dai.network.NetworkListener.NetworkData;
 import com.dai.server.EDAIProtocol;
@@ -78,6 +79,12 @@ public class DAIGame extends Game {
             PlayerPawn player = new PlayerPawn(new PlayerData(), new Vector2(0, 0));
             World.getInstance().spawn(player, new Vector2(0, 0));
         }
+
+        /** Initialise core singletons and managers */
+        Engine.getInstance().init();
+        World.getInstance().init();
+        UIManager.getInstance().init();
+        PlayerController.getInstance().init();
     }
 
     @Override

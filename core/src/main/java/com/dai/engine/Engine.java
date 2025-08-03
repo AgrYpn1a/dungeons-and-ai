@@ -67,6 +67,8 @@ public final class Engine {
         instance = this;
     }
 
+    public void init() {}
+
     public void render(float dt) {
         for(int i=0; i<layers.length; i++) {
             Layer layer = layers[i];

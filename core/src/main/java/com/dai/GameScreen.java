@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -47,7 +48,7 @@ public class GameScreen implements Screen {
         uiCamera = new OrthographicCamera();
 
         viewport = new ScreenViewport(camera);
-        uiViewport = new FitViewport(SCREEN_WIDTH, SCREEN_HEIGHT, uiCamera);
+        uiViewport = new ScreenViewport(uiCamera);
 
         camera.position.set(
             ((World.WORLD_SIZE * World.TILE_SIZE) / 2),
@@ -57,7 +58,6 @@ public class GameScreen implements Screen {
         camera.zoom = World.CAMERA_ZOOM;
         camera.update();
         uiCamera.update();
-        uiCamera.setToOrtho(false, SCREEN_WIDTH, SCREEN_HEIGHT);;
 
         font = new BitmapFont();
         engine = new Engine(batch);
@@ -66,9 +66,6 @@ public class GameScreen implements Screen {
         engine.registerViewport(Layer.Player, viewport);
         engine.registerViewport(Layer.Indicators, viewport);
         engine.registerViewport(Layer.UI, uiViewport);
-
-        UIManager.getInstance().init();
-        PlayerController.getInstance().init();
     }
 
     @Override
@@ -105,7 +102,7 @@ public class GameScreen implements Screen {
         font.draw(
             batch,
             "UIManager Mouse at (" + UIManager.getInstance().getMouseWorldPos().x + ", " + UIManager.getInstance().getMouseWorldPos().y + ")",
-            25, Gdx.graphics.getHeight() - 50, 100,
+             25, Gdx.graphics.getHeight() - 50, 100,
             Align.topLeft,
             false);
 
@@ -120,7 +117,7 @@ public class GameScreen implements Screen {
 
         // Resize your screen here. The parameters represent the new window size.
         viewport.update(width, height);
-        uiViewport.update(width, height);
+        uiViewport.update(width, height, true);
 
         viewport.getCamera().update();
         uiViewport.getCamera().update();

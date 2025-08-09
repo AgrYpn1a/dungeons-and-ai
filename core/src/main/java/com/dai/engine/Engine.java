@@ -70,17 +70,22 @@ public final class Engine {
     public void init() {}
 
     public void render(float dt) {
+
+
         for(int i=0; i<layers.length; i++) {
             Layer layer = layers[i];
             Optional<Viewport> viewport = layerViewports.get(layer);
             List<Entity> entities = layerEntities.get(layer);
+            // logger.info("Rendering entities from  " + layer + " # " + entities.size());
 
             if(viewport.get() != null && entities.size() > 0) {
                 viewport.get().apply();
                 mainBatch.setProjectionMatrix(viewport.get().getCamera().combined);
 
                 for(int j=0; j<entities.size(); j++) {
-                    entities.get(j).render(mainBatch, dt);
+                    if(entities.get(j).shouldRender()) {
+                        entities.get(j).render(mainBatch, dt);
+                    }
                 }
 
                 // We need to flush here, in order not to mix viewports

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -13,6 +14,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.dai.TextureManager;
+import com.dai.ai.ITraversable;
 import com.dai.engine.Engine;
 import com.dai.engine.Entity;
 import com.dai.engine.Engine.Layer;
@@ -55,6 +57,8 @@ public class World {
 
     public void init() {}
 
+    public Tile[][] getTiles() { return tiles; }
+
     public Stream<Entity> getEntities() {
         Stream<Entity> tiles = Arrays.stream(this.tiles).flatMap(Arrays::stream);
         Stream<Entity> worldEntities = entities.values().stream();
@@ -73,6 +77,35 @@ public class World {
         }
 
         return tiles[y][x];
+    }
+
+    public List<ITraversable> getNeighbours(ITraversable node) {
+        List<ITraversable> neighbours = new LinkedList<>();
+
+        int x = (int)node.getPosition().x;
+        int y = (int)node.getPosition().y;
+
+        // Check north
+        if(y+1 >= 0 && y+1 < tiles.length) {
+            neighbours.add(tiles[y+1][x]);
+        }
+
+        // Check south
+        if(y-1 >= 0 && y-1 < tiles.length) {
+            neighbours.add(tiles[y-1][x]);
+        }
+
+        // Check east
+        if(x+1 >= 0 && x+1 < tiles[0].length) {
+            neighbours.add(tiles[y][x+1]);
+        }
+
+        // Check west
+        if(x-1 >= 0 && x-1 < tiles[0].length) {
+            neighbours.add(tiles[y][x-1]);
+        }
+
+        return neighbours;
     }
 
     public synchronized void spawn(Entity e, Vector2 pos) {

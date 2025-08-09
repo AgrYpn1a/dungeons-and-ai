@@ -23,7 +23,7 @@ public final class PlayerPawn extends Entity {
 
     private PlayerData data;
 
-    public PlayerPawn(PlayerData data, Vector2 pos) {
+    public PlayerPawn(PlayerData data, Vector2 pos, boolean isOpponent) {
         super();
 
         this.data = data;
@@ -31,7 +31,9 @@ public final class PlayerPawn extends Entity {
 
         this.setPosition(pos);
         this.AddComponent(new RenderComponent(
-            TextureManager.getInstance().getPlayerTexture()));
+            isOpponent
+            ? TextureManager.getInstance().getOpponentTexture()
+            : TextureManager.getInstance().getPlayerTexture()));
     }
 
     @Override

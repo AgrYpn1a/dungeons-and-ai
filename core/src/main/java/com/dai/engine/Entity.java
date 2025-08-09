@@ -16,6 +16,7 @@ import com.dai.math.Transform2D;
 public abstract class Entity extends Transform2D implements ITickable {
     protected Transform2D transform;
     protected List<IComponent> components;
+    protected boolean shouldRender = true;
 
     protected Entity() {
         super();
@@ -74,5 +75,6 @@ public abstract class Entity extends Transform2D implements ITickable {
 
     public void render(SpriteBatch batch, float deltaTime) {}
 
-    public boolean shouldRender() { return true; }
+    public boolean shouldRender() { return shouldRender; }
+    public void setShouldRender(boolean shouldRender ) { this.shouldRender = shouldRender; }
 }

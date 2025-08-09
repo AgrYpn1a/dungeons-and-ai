@@ -76,7 +76,7 @@ public class DAIGame extends Game {
 
         /** Initialise for offline mode */
         if(isOfflineMode) {
-            PlayerPawn player = new PlayerPawn(new PlayerData(), new Vector2(0, 0));
+            PlayerPawn player = new PlayerPawn(new PlayerData(), new Vector2(0, 0), false);
             World.getInstance().spawn(player, new Vector2(0, 0));
         }
 
@@ -116,11 +116,19 @@ public class DAIGame extends Game {
         EDAIProtocol message = nData.type;
         Object data = nData.data;
 
-        // TODO: Separate enemy spawn logic
-        if(message == EDAIProtocol.SpawnPlayer || message == EDAIProtocol.SpawnEnemy) {
+        if(message == EDAIProtocol.SpawnPlayer) {
             PlayerData pData = (PlayerData) data;
             if(pData != null) {
-                PlayerPawn player = new PlayerPawn(pData, pData.spawnPos);
+                PlayerPawn player = new PlayerPawn(pData, pData.spawnPos, false);
+                World.getInstance().spawn(player, pData.spawnPos);
+            } else {
+                // TODO: Possibly handle wrong message, but should never happen!
+            }
+        }
+        else if(message == EDAIProtocol.SpawnEnemy) {
+            PlayerData pData = (PlayerData) data;
+            if(pData != null) {
+                PlayerPawn player = new PlayerPawn(pData, pData.spawnPos, true);
                 World.getInstance().spawn(player, pData.spawnPos);
             } else {
                 // TODO: Possibly handle wrong message, but should never happen!

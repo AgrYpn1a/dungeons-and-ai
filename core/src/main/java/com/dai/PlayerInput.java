@@ -5,28 +5,19 @@ import java.util.function.Function;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 
 public final class PlayerInput implements InputProcessor {
 
-    private Consumer<Vector2> onMouseDown;
+    private Consumer<Vector3> onMouseDown;
 
-    public PlayerInput(Consumer<Vector2> onMouseDown) {
+    public PlayerInput(Consumer<Vector3> onMouseDown) {
         this.onMouseDown = onMouseDown;
     }
 
 	@Override
     public boolean touchDown(int x, int y, int pointer, int button) {
-        onMouseDown.accept(new Vector2(x, y));
-
-        if (button == Input.Buttons.LEFT) {
-            if(onMouseDown != null) {
-                onMouseDown.accept(new Vector2(x, y));
-            }
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
 	@Override
@@ -51,10 +42,15 @@ public final class PlayerInput implements InputProcessor {
 	}
 
 	@Override
-	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
-		// throw new UnsupportedOperationException("Unimplemented method 'touchUp'");
-		return true;
+	public boolean touchUp(int x, int y, int pointer, int button) {
+        if (button == Input.Buttons.LEFT) {
+            if(onMouseDown != null) {
+                onMouseDown.accept(new Vector3(x, y, 0));
+            }
+            return true;
+        }
+
+        return false;
 	}
 
 	@Override

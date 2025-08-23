@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.dai.server.GameMatch;
 import com.dai.server.GameMatch.EGameState;
 
-public class DAIServer {
+public final class DAIServer implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(DAIServer.class);
     private static volatile DAIServer instance;
 
@@ -23,7 +23,9 @@ public class DAIServer {
         if(instance == null) {
             synchronized(DAIServer.class) {
                 if(instance == null) {
-                    instance = new DAIServer();
+                    try {
+                        instance = new DAIServer();
+                    } catch(Exception e) { /* TODO: Handle gracefully */}
                 }
             }
         }
@@ -36,14 +38,17 @@ public class DAIServer {
     private List<GameMatch> matches = new ArrayList<>();
     private BlockingQueue<Socket> playerClients;
     private Thread connectionThread;
+    private ServerSocket ss;
 
-    public DAIServer() {
+    public DAIServer() throws Exception {
         this.playerClients = new LinkedBlockingQueue<>();
         instance = this;
+
+        ss = new ServerSocket(PORT);
     }
 
-    public void run() throws Exception {
-        ServerSocket ss = new ServerSocket(PORT);
+    @Override
+    public void run()  {
         logger.info("Server running on port " + PORT + " ...");
 
         /** Connection handler */
@@ -98,14 +103,14 @@ public class DAIServer {
                     }
                     i++;
                 }
-                // matches = matches.stream().filter(m -> m.getGameState() != EGameState.Ended).toList();
             }
         } catch(Exception e) {
             logger.error("Server terminated with error.");
             logger.error(e.getMessage());
         } finally {
             logger.info("Server stopped gracefully.");
-            ss.close();
+            try { ss.close(); } catch(Exception e) { /* TODO: Handle gracefully */}
+
         }
     }
 }

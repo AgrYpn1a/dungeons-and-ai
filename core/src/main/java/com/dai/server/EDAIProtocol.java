@@ -3,9 +3,11 @@ package com.dai.server;
 public enum EDAIProtocol {
     None(0),
     Alive(1),
-    SpawnPlayer(2),
-    SpawnEnemy(3),
-    PlayerData(4);
+    Connect(2),
+    Connected(3),
+    SpawnPlayer(4),
+    SpawnEnemy(5),
+    PlayerData(6);
 
     public final byte value;
 

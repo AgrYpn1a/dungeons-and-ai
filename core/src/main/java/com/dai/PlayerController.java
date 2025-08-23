@@ -12,22 +12,33 @@ import com.dai.ai.ITraversable;
 import com.dai.engine.Engine;
 import com.dai.engine.Engine.Layer;
 import com.dai.entities.IndicatorEntity.EIndicator;
+import com.dai.network.*;
 import com.dai.pools.IndicatorsPool;
 import com.dai.engine.Entity;
 import com.dai.engine.ITickable;
 import com.dai.engine.RenderComponent;
 import com.dai.world.World;
 
+import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class PlayerController implements ITickable {
     private static final Logger logger = LoggerFactory.getLogger(PlayerController.class);
+
+    public static class PlayerData implements Serializable {
+        public UUID id;
+        public String name;
+        public Vector2 spawnPos;
+    }
 
     private static PlayerController instance;
     public static PlayerController getInstance() {
@@ -45,6 +56,12 @@ public final class PlayerController implements ITickable {
     private List<Entity> cachedPathMarkers = new ArrayList<>();
 
     private ISearch search = new AStar();
+    private PlayerPawn myPlayerPawn;
+    private PlayerData playerData;
+
+    /** Network */
+    // private Registry registry;
+    private INetworkGameServer  networkGame;
 
     public PlayerController() {
         input = new PlayerInput(
@@ -82,8 +99,31 @@ public final class PlayerController implements ITickable {
     }
 
     public void init() {
-        logger.info("Initialized.");
+        logger.info("Initialized with no args (online mode).");
     }
+
+    public void init(PlayerPawn pawn, PlayerData playerData) {
+        this.myPlayerPawn = pawn;
+        this.playerData = playerData;
+
+        logger.info("Initialized with args (offline mode).");
+    }
+
+    public void setPlayerPawn(PlayerPawn pawn) {
+        this.myPlayerPawn = pawn;
+    }
+
+    public void setPlayerData(PlayerData playerData) {
+        this.playerData = playerData;
+    }
+
+    public void initNetworking(INetworkGameServer networkGame) throws Exception {
+        logger.info("Initialized networking.");
+
+        this.networkGame = networkGame;
+    }
+
+    public boolean hasPawn() { return myPlayerPawn != null; }
 
     @Override
     public void tick(float deltaTime) {
@@ -107,32 +147,38 @@ public final class PlayerController implements ITickable {
     public void processMainAction(Vector3 screenMousePos) {
         Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
         Entity e = World.getInstance().getEntityAtPoint(mousePos);
-        // Vector2 worldPos = World.toWorldPos(e.getPosition());
 
-        // logger.info("lmb pressed at" + "(" + mousePos.x + "," + mousePos.y + ")");
-        // logger.info("entity at" + "(" + e.getPosition().x + "," + e.getPosition().y + ")");
-
-        Queue<ITraversable> path = search.findPath(
-                                        World.getInstance().getTiles()[0][0],
-                                        World.getInstance().getTiles()[(int)e.getPosition().y][(int)e.getPosition().x]);
-
-        // Make sure we have enough markers
-        while(cachedPathMarkers.size() < path.size()) {
-            cachedPathMarkers.add(pathMarkerPool.borrowFrom());
+        try {
+            logger.info("Is my turn?" + networkGame.isMyTurn(playerData.id));
+        } catch(Exception err) {
+            logger.error("Error communicating with NetworkGame: " + err.getMessage());
         }
 
-        // Clear old path
-        for(Entity marker : cachedPathMarkers) {
-            marker.setShouldRender(false);
-        }
+        // int playerX = (int) myPlayerPawn.getPosition().x;
+        // int playerY = (int) myPlayerPawn.getPosition().y;
+        // Queue<ITraversable> path = search.findPath(
+        //                                 World.getInstance().getTiles()[playerY][playerX],
+        //                                 World.getInstance().getTiles()[(int)e.getPosition().y][(int)e.getPosition().x]);
 
-        logger.info(">>> Found path <<<");
-        int i = 0;
-        for(ITraversable t : path) {
-            cachedPathMarkers.get(i).setPosition(t.getPosition());
-            cachedPathMarkers.get(i).setShouldRender(true);
-            i++;
-        }
+        // // Make sure we have enough markers
+        // while(cachedPathMarkers.size() < path.size()) {
+        //     cachedPathMarkers.add(pathMarkerPool.borrowFrom());
+        // }
+
+        // // Clear old path
+        // for(Entity marker : cachedPathMarkers) {
+        //     marker.setShouldRender(false);
+        // }
+
+        // logger.info(">>> Found path <<<");
+        // int i = 0;
+        // for(ITraversable t : path) {
+        //     cachedPathMarkers.get(i).setPosition(t.getPosition());
+        //     cachedPathMarkers.get(i).setShouldRender(true);
+        //     i++;
+        // }
+
+        // myPlayerPawn.move(path);
     }
 
 }

@@ -27,6 +27,13 @@ public final class NetworkListener extends Thread {
                 EDAIProtocol type = EDAIProtocol.fromByte(in.readByte());
 
                 switch(type) {
+                    case Connected: {
+                        NetworkData nData = new NetworkData();
+                        nData.type = type;
+                        messageQueue.offer(nData);
+                        break;
+                    }
+
                     case SpawnPlayer: {
                         Object data =  in.readObject();
                         NetworkData nData = new NetworkData();

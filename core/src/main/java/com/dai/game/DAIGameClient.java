@@ -1,26 +1,14 @@
-package com.dai;
+package com.dai.game;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.dai.DAIServer;
+import com.dai.PlayerController;
 import com.dai.PlayerController.PlayerData;
-import com.dai.engine.Engine;
+import com.dai.PlayerPawn;
+import com.dai.TextureManager;
+import com.dai.UIManager;
+import com.dai.network.DAINetwork;
 import com.dai.network.INetworkGameClient;
 import com.dai.network.INetworkGameServer;
 import com.dai.network.NetworkGameClient;
@@ -32,32 +20,58 @@ import com.dai.screens.GameScreen;
 import com.dai.server.EDAIProtocol;
 import com.dai.world.World;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class DAIGame extends Game {
-    Socket ss;
-    PlayerPawn player;
-    NetworkListener listener;
+import org.slf4j.LoggerFactory;
 
-    ObjectOutputStream out;
-    ObjectInputStream in;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-    Queue<NetworkData> messageQueue;
+import org.slf4j.Logger;
 
-    private static final Logger logger = LoggerFactory.getLogger(DAIGame.class);
+public final class DAIGameClient extends DAIGameCore {
+    private static final Logger logger = LoggerFactory.getLogger(DAIGameClient.class.getSimpleName());
+    private GameScreen scrMainGame;
 
+    /** Net logic */
+    private DAINetwork network;
     private boolean isOfflineMode;
 
-    public DAIGame(boolean isOfflineMode) {
-        super();
+    private Socket ss;
+    private PlayerPawn offlinePlayer;
+    private NetworkListener listener;
 
-        this.isOfflineMode = isOfflineMode;
-    }
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
 
-    public boolean getIsOfflineMode() { return isOfflineMode; }
+    private Queue<NetworkData> messageQueue;
 
     @Override
     public void create() {
+        super.create();
 
+        TextureManager.getInstance().setTexture(new Texture("selenasdungeon32x32.png"));
+        PlayerController.getInstance().init();
+
+        engine.setMainBatch(new SpriteBatch());
+
+        /** Init the libgdx game screen */
+        scrMainGame = new GameScreen();
+        setScreen(scrMainGame);
+
+        UIManager.getInstance().init();
+
+        network = new DAINetwork(false);
+
+        logger.info("create() called successfully.");
+
+        // TODO: Move this out
         if(!isOfflineMode) {
             try {
                 // Connect to the server
@@ -78,41 +92,15 @@ public class DAIGame extends Game {
                 // try { ss.close(); } catch(Exception e) {}
             }
         }
-
-        /** Initialize managers */
-        // TextureManager.getInstance().setTexture(new Texture("tileset.png"));
-        TextureManager.getInstance().setTexture(new Texture("selenasdungeon32x32.png"));
-
-        /** Init the libgdx game screen */
-        setScreen(new GameScreen());
-
-        /** Initialise core singletons and managers */
-        Engine.getInstance().init();
-        World.getInstance().init();
-        UIManager.getInstance().init();
-        PlayerController.getInstance().init();
-
-        /** Initialise for offline mode */
-        if(isOfflineMode) {
-            PlayerPawn offlinePlayer = new PlayerPawn(new Vector2(0, 0), false);
-            World.getInstance().spawn(offlinePlayer, new Vector2(0, 0));
-            PlayerController.getInstance().setPlayerPawn(offlinePlayer);
-        }
     }
 
     @Override
     public void dispose() {
-        try {
-            logger.info("Closing streams.");
-            out.close();
-            in.close();
-            ss.close();
-            listener.interrupt();
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
+        super.dispose();
+        logger.info("dispose() called successfully.");
     }
 
+    /** Main game loop */
     @Override
     public void render() {
         super.render();

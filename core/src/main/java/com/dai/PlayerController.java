@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.dai.PlayerInput.EInputAction;
 import com.dai.ai.AStar;
 import com.dai.ai.ISearch;
 import com.dai.ai.ITraversable;
@@ -60,8 +61,6 @@ public final class PlayerController implements ITickable {
     private PlayerPawn myPlayerPawn;
     private PlayerData playerData;
 
-
-
     /** Gameplay */
     private Vector2 target = null;
     private Queue<Vector2> path = null;
@@ -71,10 +70,10 @@ public final class PlayerController implements ITickable {
     private INetworkGameServer  networkGame;
 
     public PlayerController() {
-        input = new PlayerInput(
-                    (mousePos) -> {
-                        processMainAction(mousePos);
-                    });
+        input = new PlayerInput();
+
+        input.registerInput(EInputAction.Main, this::processMainAction);
+        input.registerInput(EInputAction.EndTurn, this::processEndTurn);
 
         actionIndicator = new Entity() {
             @Override
@@ -136,72 +135,99 @@ public final class PlayerController implements ITickable {
 
     @Override
     public void tick(float deltaTime) {
-        try {
-            if(networkGame != null && !networkGame.isServer()) {
-                Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
-                Entity e = World.getInstance().getEntityAtPoint(mousePos);
-
-                // Render action indicator over an entity in the world
-                if(e != null) {
-                    actionIndicator.setPosition(World.toWorldPos(e.getPosition()));
-                }
-            }
-        } catch(RemoteException e) { logger.error(e.getMessage()); }
-    }
-
-    /**
-     * A 'main action' is init on mouse button down
-     *  */
-    public void processMainAction(Vector3 screenMousePos) {
-        try {
-            if(!canDoAction()) {
-                return;
-            }
-
+        if(!NetworkManager.isServer()) {
             Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
             Entity e = World.getInstance().getEntityAtPoint(mousePos);
 
-            /** Confirm action */
-            if(target != null && path.contains(e.getPosition())) {
-                // TODO
-                logger.info("Action confirmed.");
-                networkGame.doAction(NetworkGameClient.getInstance().getPlayerId(), target);
-                return;
+            // Render action indicator over an entity in the world
+            if(e != null) {
+                actionIndicator.setPosition(World.toWorldPos(e.getPosition()));
             }
+        }
+    }
 
-            // Update current target
-            target = e.getPosition();
+    private boolean canDoAction() {
+        try {
+            // Network checks
+            if(NetworkManager.isServer() && networkGame.isMyTurn(NetworkGameClient.getInstance().getId()) || NetworkManager.isOffline()) {
 
-            // logger.info("Is my turn? " + networkGame.isMyTurn(NetworkGameClient.getInstance().getPlayerId()));
-            // logger.info("Is server? " + networkGame.isServer());
-
-            path = networkGame.requestPath(NetworkGameClient.getInstance().getPlayerId(), e.getPosition());
-
-            // Make sure we have enough markers
-            while(cachedPathMarkers.size() < path.size()) {
-                cachedPathMarkers.add(pathMarkerPool.borrowFrom());
+                // Actual gameplay checks
+                return myPlayerPawn.getState() == EPawnState.Ready;
             }
-
-            // Clear old path
-            for(Entity marker : cachedPathMarkers) {
-                marker.setShouldRender(false);
-            }
-
-            int i = 0;
-            for(Vector2 pos : path) {
-                cachedPathMarkers.get(i).setPosition(pos);
-                cachedPathMarkers.get(i).setShouldRender(true);
-                i++;
-            }
-        } catch(Exception err) {
-            logger.error("Error communicating with NetworkGame: " + err.getMessage());
+        } catch(RemoteException e) {
+            return false;
         }
 
-        // int playerX = (int) myPlayerPawn.getPosition().x;
-        // int playerY = (int) myPlayerPawn.getPosition().y;
-        // Queue<ITraversable> path = search.findPath(
-        //                                 World.getInstance().getTiles()[playerY][playerX],
-        //                                 World.getInstance().getTiles()[(int)e.getPosition().y][(int)e.getPosition().x]);
+        return false;
+    }
+
+    /** Renders current path */
+    private void renderPath() {
+        // Make sure we have enough markers
+        while(cachedPathMarkers.size() < path.size()) {
+            cachedPathMarkers.add(pathMarkerPool.borrowFrom());
+        }
+
+        // Clear old path
+        for(Entity marker : cachedPathMarkers) {
+            marker.setShouldRender(false);
+        }
+
+        int i = 0;
+        for(Vector2 pos : path) {
+            cachedPathMarkers.get(i).setPosition(pos);
+            cachedPathMarkers.get(i).setShouldRender(true);
+            i++;
+        }
+    }
+
+    /** ====================
+     *  Processing actions
+     *  ====================
+     *  */
+    public void processMainAction(Vector3 screenMousePos) {
+        if(!canDoAction()) {
+            return;
+        }
+
+        if(NetworkManager.isOffline()) {
+            Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
+            Entity e = World.getInstance().getEntityAtPoint(mousePos);
+
+            int playerX = (int) myPlayerPawn.getPosition().x;
+            int playerY = (int) myPlayerPawn.getPosition().y;
+            path = search.findPath(
+                World.getInstance().getTiles()[playerY][playerX],
+                World.getInstance().getTiles()[(int)e.getPosition().y][(int)e.getPosition().x]);
+            renderPath();
+
+            /** Confirm action */
+            if(target != null && path.contains(e.getPosition())) { /** TODO */}
+        } else {
+            try {
+                Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
+                Entity e = World.getInstance().getEntityAtPoint(mousePos);
+
+                /** Confirm action */
+                if(target != null && path.contains(e.getPosition())) {
+                    // TODO
+                    logger.info("Action confirmed.");
+                    networkGame.doAction(NetworkGameClient.getInstance().getPlayerId(), target);
+                    return;
+                }
+
+                // Update current target
+                target = e.getPosition();
+                path = networkGame.requestPath(NetworkGameClient.getInstance().getPlayerId(), e.getPosition());
+
+                renderPath();
+
+            } catch(Exception err) {
+                logger.error("Error communicating with NetworkGame: " + err.getMessage());
+            }
+        }
+
+
 
         // // Make sure we have enough markers
         // while(cachedPathMarkers.size() < path.size()) {
@@ -224,17 +250,8 @@ public final class PlayerController implements ITickable {
         // myPlayerPawn.move(path);
     }
 
-    private boolean canDoAction() throws RemoteException {
-        // Network checks
-        if(networkGame != null
-           && !networkGame.isServer()
-           && networkGame.isMyTurn(NetworkGameClient.getInstance().getId())) {
-
-            // Actual gameplay checks
-            return myPlayerPawn.getState() == EPawnState.Ready;
-        }
-
-        return false;
+    public void processEndTurn(Integer keycode) {
+        logger.info("Request END TURN");
     }
 
 }

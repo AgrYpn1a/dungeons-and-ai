@@ -1,6 +1,8 @@
 package com.dai.network;
 
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.RemoteServer;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
@@ -16,7 +18,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.dai.PlayerPawn;
 import com.dai.ai.AStar;
 import com.dai.ai.ISearch;
-import com.dai.ai.ITraversable;
 import com.dai.server.GameMatch;
 import com.dai.world.Pawn.EPawnState;
 import com.dai.world.Pawn.PawnData;
@@ -35,10 +36,16 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 
     private ISearch search;
 
-    private static NetworkGameServer instance;
-    public static NetworkGameServer getInstance() throws RemoteException {
+    private static INetworkGameServer instance;
+    public static INetworkGameServer getInstance() throws RemoteException {
         if(instance == null) {
-            instance = new NetworkGameServer();
+			try {
+				Registry registry = LocateRegistry.getRegistry(16000);
+				INetworkGameServer netInstance = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
+				instance = netInstance;
+			} catch(Exception e) {
+				instance = new NetworkGameServer();
+			}
         }
 
         return instance;

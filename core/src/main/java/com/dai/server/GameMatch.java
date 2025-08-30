@@ -131,7 +131,7 @@ public final class GameMatch extends Thread {
         /** Initialize network stuff */
         registry = LocateRegistry.createRegistry(16000);
 
-        netGameServer = NetworkGameServer.getInstance();
+        netGameServer = (NetworkGameServer) NetworkGameServer.getInstance();
         registry.rebind(NetworkGameServer.class.getSimpleName(), netGameServer);
 
         logger.info("Registry created " +  registry.toString());

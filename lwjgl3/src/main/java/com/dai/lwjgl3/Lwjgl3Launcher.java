@@ -29,13 +29,16 @@ public class Lwjgl3Launcher {
 
     private static Lwjgl3Application createApplication(String[] args) {
 
-        if(Arrays.asList(args).contains("--server")) {
+        boolean isOfflineMode = Arrays.asList(args).contains("--offline");
+        boolean isServer = Arrays.asList(args).contains("--server");
+
+        if(isServer) {
             Lwjgl3ApplicationConfiguration config = getDefaultConfiguration();
             config.setInitialVisible(false);
 
             return new Lwjgl3Application(new DAIGameServer(), config);
         } else {
-            return new Lwjgl3Application(new DAIGameClient(), getDefaultConfiguration());
+            return new Lwjgl3Application(new DAIGameClient(isOfflineMode), getDefaultConfiguration());
         }
     }
 

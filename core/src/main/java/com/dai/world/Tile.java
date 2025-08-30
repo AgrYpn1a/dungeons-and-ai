@@ -1,5 +1,6 @@
 package com.dai.world;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -8,13 +9,18 @@ import com.badlogic.gdx.math.Vector2;
 import com.dai.ai.ITraversable;
 import com.dai.engine.Entity;
 import com.dai.engine.RenderComponent;
+import com.dai.network.DAINetwork;
 
-public class Tile extends Entity implements ITraversable {
+public class Tile extends Entity implements ITraversable, Serializable {
     public Tile(TextureRegion texture, Vector2 position) {
         super();
 
         this.transform.setPosition(position);
         this.AddComponent(new RenderComponent(texture));
+
+        if(DAINetwork.isServer()) {
+            this.setShouldRender(false);
+        }
     }
 
     /** {@link ITraversable} */

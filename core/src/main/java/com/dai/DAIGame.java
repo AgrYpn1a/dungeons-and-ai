@@ -150,7 +150,7 @@ public class DAIGame extends Game {
 
                 // Get remote NetworkGame
                 netGameServer = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
-                netGameClient = new NetworkGameClient();
+                netGameClient = NetworkGameClient.getInstance();
 
                 netGameServer.registerClient(netGameClient);
 

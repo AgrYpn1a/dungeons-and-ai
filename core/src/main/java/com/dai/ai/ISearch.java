@@ -2,6 +2,8 @@ package com.dai.ai;
 
 import java.util.Queue;
 
+import com.badlogic.gdx.math.Vector2;
+
 public interface ISearch {
-    public Queue<ITraversable> findPath(ITraversable startNode, ITraversable target);
+    public Queue<Vector2> findPath(ITraversable startNode, ITraversable target);
 }

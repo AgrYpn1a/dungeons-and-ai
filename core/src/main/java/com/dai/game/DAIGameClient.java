@@ -57,6 +57,8 @@ public final class DAIGameClient extends DAIGameCore {
         super.create();
 
         TextureManager.getInstance().setTexture(new Texture("selenasdungeon32x32.png"));
+
+        World.getInstance().init();
         PlayerController.getInstance().init();
 
         engine.setMainBatch(new SpriteBatch());
@@ -138,11 +140,11 @@ public final class DAIGameClient extends DAIGameCore {
 
                 // Get remote NetworkGame
                 netGameServer = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
-                netGameClient = new NetworkGameClient();
+                netGameClient = NetworkGameClient.getInstance();
 
                 netGameServer.registerClient(netGameClient);
 
-                // PlayerController.getInstance().initNetworking(networkGame);
+                PlayerController.getInstance().initNetworking(netGameServer);
             } catch(Exception e) {
                 logger.error(e.getMessage());
             }

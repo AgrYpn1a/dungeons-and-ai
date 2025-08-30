@@ -2,8 +2,9 @@ package com.dai.world;
 
 import java.io.Serializable;
 import java.util.Queue;
+import java.util.function.Consumer;
 
-import com.dai.ai.ITraversable;
+import com.badlogic.gdx.math.Vector2;
 import com.dai.engine.Entity;
 
 public class Pawn extends Entity {
@@ -19,8 +20,12 @@ public class Pawn extends Entity {
     }
 
     protected PawnData data;
-    protected EPawnState state;
-    protected Queue<ITraversable> path;
+    protected EPawnState state = EPawnState.Ready;
+    protected Queue<Vector2> path;
+
+    public Consumer<EPawnState> onStateChanged;
+    public Consumer<PawnData> onDataChanged;
+    public Consumer<Vector2> onPositionChanged;
 
     /** Movement mechanics */
     private float moveTime = 0.5f;
@@ -32,26 +37,42 @@ public class Pawn extends Entity {
 
     public EPawnState getState() { return state; }
 
-    public void move(Queue<ITraversable> path) {
+    public void setState(EPawnState state) {
+        this.state = state;
+
+        if(state == EPawnState.Dead) {
+            // TODO: Handle death!
+        }
+    }
+
+    public void setData(PawnData data) {
+        this.data = data;
+    }
+
+    public void move(Queue<Vector2> path) {
        this.state = EPawnState.Busy;
        this.path = path;
     }
 
-    public void doDamage(int damage) {
-        this.data.health -= damage;
-    }
+    // public void doDamage(int damage) {
+    //     this.data.health -= damage;
+    // }
 
-    public boolean isDead() {
-        return this.data.health <= 0;
-    }
+    // public boolean isDead() {
+    //     return this.data.health <= 0;
+    // }
 
     @Override
     public void tick(float deltaTime) {
         /** Movement mechanics */
         if(path != null && !path.isEmpty()) {
             if(moveTick >= moveTime) {
+
+                // Move to position
                 moveTick = 0f;
-                setPosition(path.poll().getPosition());
+                Vector2 newPosition = path.poll();
+                setPosition(newPosition);
+                onPositionChanged.accept(newPosition);
 
                 if(path.isEmpty()) {
                     state = EPawnState.Ready;

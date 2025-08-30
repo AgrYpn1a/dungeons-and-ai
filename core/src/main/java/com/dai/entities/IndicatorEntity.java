@@ -21,9 +21,6 @@ public final class IndicatorEntity extends Entity {
     private EIndicator indicatorType;
 
     public IndicatorEntity(EIndicator indicatorType) {
-
-        System.out.println("IndicatorEntity -> " + indicatorType);
-
         this.indicatorType = indicatorType;
         this.AddComponent(new RenderComponent(
             TextureManager.getInstance().getIndicator(indicatorType)

@@ -9,6 +9,7 @@ import java.util.UUID;
 import com.badlogic.gdx.math.Vector2;
 import com.dai.PlayerController;
 import com.dai.PlayerPawn;
+import com.dai.world.Pawn.EPawnState;
 import com.dai.world.Pawn.PawnData;
 import com.dai.world.World;
 
@@ -20,32 +21,22 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
     private final UUID id;
     private List<NetworkPawn> netPawns = new LinkedList<>();
 
-    public NetworkGameClient() throws RemoteException {
+    private static NetworkGameClient instance;
+    public static NetworkGameClient getInstance() throws RemoteException {
+        if(instance == null) {
+            instance = new NetworkGameClient();
+        }
+
+        return instance;
+    }
+
+    private NetworkGameClient() throws RemoteException {
         this.id = UUID.randomUUID();
     }
 
-	@Override
-	public void onSpawnPawn(NetworkPawn netPawn, Vector2 location) throws RemoteException {
-        // PlayerPawn pawnPlayer = new PlayerPawn(netPawn.getPawnData(), false);
-        // World.getInstance()
-    }
+    public UUID getPlayerId() { return id; }
 
 	@Override
-	public void onSpawnPawn(NetworkPawn netPawn, Vector2 location, UUID playerId, boolean isPlayer) throws RemoteException {
-
-        // logger.info("onSpawnPawn called.");
-
-        // // Spawn player
-        // if(isPlayer && id == playerId) {
-        //     PlayerPawn pawnPlayer = new PlayerPawn(netPawn.getPawnData(), location, false);
-        //     World.getInstance().spawn(pawnPlayer, location);
-        // } else if(isPlayer) {
-        //     // Spawn opponent player
-        //     PlayerPawn pawnOpponent = new PlayerPawn(netPawn.getPawnData(), location, true);
-        //     World.getInstance().spawn(pawnOpponent, location);
-        // }
-    }
-
 	public void onSpawnPawn(UUID netPawnId, Vector2 location, UUID playerId, boolean isPlayer) throws RemoteException {
         logger.info("[id:" + id + "] " + "onSpawnPawn called with netPawnId: " + netPawnId + ", playerId " + playerId);
 
@@ -78,4 +69,28 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
 	public UUID getId() throws RemoteException {
         return this.id;
 	}
+
+	@Override
+    public void onPawnPositionChange(UUID netPawnId, Vector2 position) throws RemoteException {
+        NetworkPawn netPawn = netPawns.stream()
+            .filter(p -> p.getId().equals(netPawnId))
+            .findFirst().get();
+        netPawn.getPossessedPawn().setPosition(position);
+    }
+
+	@Override
+    public void onPawnStateChange(UUID netPawnId, EPawnState state) throws RemoteException {
+        NetworkPawn netPawn = netPawns.stream()
+            .filter(p -> p.getId().equals(netPawnId))
+            .findFirst().get();
+        netPawn.getPossessedPawn().setState(state);
+    }
+
+	@Override
+    public void onPawnDataChange(UUID netPawnId, PawnData data) throws RemoteException {
+        NetworkPawn netPawn = netPawns.stream()
+            .filter(p -> p.getId().equals(netPawnId))
+            .findFirst().get();
+        netPawn.getPossessedPawn().setData(data);
+    }
 }

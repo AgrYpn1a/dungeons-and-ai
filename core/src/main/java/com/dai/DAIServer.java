@@ -85,7 +85,8 @@ public final class DAIServer implements Runnable {
                 logger.trace("Number of players in lobby: " + playerClients.size());
                 logger.trace("Number of active games: " + matches.size());
 
-                if(playerClients.size() >= 2) {
+                /** Create match when we have two players. */
+                if(playerClients.size() == 2) {
                     Socket c1 = playerClients.take();
                     Socket c2 = playerClients.take();
 

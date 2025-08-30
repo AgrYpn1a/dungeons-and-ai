@@ -1,4 +1,4 @@
-package com.dai;
+package com.dai.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -14,16 +14,13 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.dai.UIManager;
 import com.dai.engine.Engine;
 import com.dai.engine.Engine.Layer;
 import com.dai.world.World;
 
 /** First screen of the application. Displayed after the application is created. */
-public class GameScreen implements Screen {
-
-    private static final int SCREEN_WIDTH = 1024;
-    private static final int SCREEN_HEIGHT= 760;
-
+public final class GameScreen implements Screen {
     SpriteBatch batch;
     Texture img;
     TextureRegion region;
@@ -38,7 +35,10 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
-        batch = new SpriteBatch();
+
+        engine = Engine.getInstance();
+
+        batch = engine.getMainBatch();
         batch.enableBlending();
 
         img = new Texture("tileset.png");
@@ -60,7 +60,6 @@ public class GameScreen implements Screen {
         uiCamera.update();
 
         font = new BitmapFont();
-        engine = new Engine(batch);
 
         engine.registerViewport(Layer.Default, viewport);
         engine.registerViewport(Layer.Player, viewport);
@@ -76,9 +75,6 @@ public class GameScreen implements Screen {
         // Transparency
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
-        /** Tick before rendering */
-        engine.tick(delta);
 
         /** Rendering */
         batch.begin();

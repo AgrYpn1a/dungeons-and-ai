@@ -6,6 +6,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Stack;
 
+import com.badlogic.gdx.math.Vector2;
 import com.dai.world.World;
 
 /**
@@ -69,7 +70,7 @@ public final class AStar implements ISearch {
     }
 
 	@Override
-	public Queue<ITraversable> findPath(ITraversable start, ITraversable target) {
+	public Queue<Vector2> findPath(ITraversable start, ITraversable target) {
         Node startNode = new Node(start);
         Node targetNode = new Node(target);
 
@@ -86,8 +87,6 @@ public final class AStar implements ISearch {
         while(!frontier.isEmpty() && !frontier.peek().equals(targetNode)) {
             Node currNode = frontier.poll();
             visited.add(currNode);
-
-            System.out.println("Current node -> " + currNode.getTraversable().getPosition().toString());
 
             List<Node> neighbours = getNeighbours(currNode);
             for(Node neighbour : neighbours) {
@@ -118,9 +117,9 @@ public final class AStar implements ISearch {
             curr = curr.parent;
         }
 
-        Queue<ITraversable> path = new LinkedList<>();
+        Queue<Vector2> path = new LinkedList<>();
         while(!pathStack.isEmpty()) {
-            path.add(pathStack.pop().getTraversable());
+            path.add(pathStack.pop().getTraversable().getPosition());
         }
 
         return path;

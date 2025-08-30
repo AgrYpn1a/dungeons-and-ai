@@ -4,30 +4,42 @@ import java.util.Arrays;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.dai.DAIGame;
-import com.dai.DAIServer;
-import com.dai.world.World;
+
+import com.dai.game.*;
+import com.dai.common.*;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
 
-        if(Arrays.asList(args).contains("--server")) {
-            try {
-                DAIServer server = new DAIServer();
-                server.run();
-            } catch(Exception e) {
-                // TODO: Maybe handle this in a better way
-                e.printStackTrace();
-            }
-        } else {
-            if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
-            createApplication(args);
-        }
+        // if(Arrays.asList(args).contains("--server")) {
+        //     try {
+        //         DAIServer server = new DAIServer();
+        //         server.run();
+        //     } catch(Exception e) {
+        //         // TODO: Maybe handle this in a better way
+        //         e.printStackTrace();
+        //     }
+        // } else {
+        // }
+
+        if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
+        createApplication(args);
     }
 
     private static Lwjgl3Application createApplication(String[] args) {
-        return new Lwjgl3Application(new DAIGame(Arrays.asList(args).contains("--offline")), getDefaultConfiguration());
+
+        boolean isOfflineMode = Arrays.asList(args).contains("--offline");
+        boolean isServer = Arrays.asList(args).contains("--server");
+
+        if(isServer) {
+            Lwjgl3ApplicationConfiguration config = getDefaultConfiguration();
+            config.setInitialVisible(false);
+
+            return new Lwjgl3Application(new DAIGameServer(), config);
+        } else {
+            return new Lwjgl3Application(new DAIGameClient(isOfflineMode), getDefaultConfiguration());
+        }
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
@@ -45,8 +57,8 @@ public class Lwjgl3Launcher {
 
         // configuration.setWindowedMode(800, 600);
         configuration.setWindowedMode(
-                        (int)((World.WORLD_SIZE * World.TILE_SIZE) / World.CAMERA_ZOOM) + 500,
-                        (int)((World.WORLD_SIZE * World.TILE_SIZE) / World.CAMERA_ZOOM) + 150);
+                        (int)((Config.WORLD_SIZE * Config.TILE_SIZE) / Config.CAMERA_ZOOM) + 500,
+                        (int)((Config.WORLD_SIZE * Config.TILE_SIZE) / Config.CAMERA_ZOOM) + 150);
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         //// They can also be loaded from the root of assets/ .
         configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");

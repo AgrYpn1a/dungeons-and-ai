@@ -1,18 +1,30 @@
 package com.dai;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector3;
 
+/**
+ * We will assume all actions are registered properly.
+ * */
+@SuppressWarnings("unchecked")
 public final class PlayerInput implements InputProcessor {
 
-    private Consumer<Vector3> onMouseDown;
+    public static enum EInputAction {
+        Main,
+        EndTurn
+    }
 
-    public PlayerInput(Consumer<Vector3> onMouseDown) {
-        this.onMouseDown = onMouseDown;
+    private Map<EInputAction, Consumer<?>> inputMap = new HashMap<>();
+
+    public PlayerInput() { }
+
+    public <T> void registerInput(EInputAction action, Consumer<T> callback) {
+        inputMap.put(action, callback);
     }
 
 	@Override
@@ -22,8 +34,13 @@ public final class PlayerInput implements InputProcessor {
 
 	@Override
 	public boolean keyDown(int keycode) {
-		// TODO Auto-generated method stub
-		// throw new UnsupportedOperationException("Unimplemented method 'keyDown'");
+        if(keycode == Input.Keys.Q) {
+            Consumer<Integer> c = (Consumer<Integer>) inputMap.get(EInputAction.EndTurn);
+            if(c != null) {
+                c.accept(keycode);
+            }
+        }
+
 		return true;
 	}
 
@@ -44,13 +61,13 @@ public final class PlayerInput implements InputProcessor {
 	@Override
 	public boolean touchUp(int x, int y, int pointer, int button) {
         if (button == Input.Buttons.LEFT) {
-            if(onMouseDown != null) {
-                onMouseDown.accept(new Vector3(x, y, 0));
+            Consumer<Vector3> c = (Consumer<Vector3>) inputMap.get(EInputAction.Main);
+            if(c != null) {
+                c.accept(new Vector3(x, y, 0));
             }
-            return true;
         }
 
-        return false;
+        return true;
 	}
 
 	@Override

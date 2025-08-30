@@ -23,9 +23,9 @@ public final class Engine {
     private static Engine instance;
 
     public static Engine getInstance() {
-        // if(instance == null) {
-        //     return new Engine();
-        // }
+        if(instance == null) {
+            instance = new Engine();
+        }
 
         return instance;
     }
@@ -49,11 +49,11 @@ public final class Engine {
         Layer.UI
     };
 
-    private final SpriteBatch mainBatch;
+    private SpriteBatch mainBatch;
 
-    public Engine(SpriteBatch mainBatch) {
-        this.mainBatch = mainBatch;
-
+    // Engine without rendering
+    public Engine() {
+        mainBatch = null;
         tickables = new ArrayList<>();
 
         layerEntities = new HashMap<>();
@@ -62,15 +62,30 @@ public final class Engine {
         for(int i=0; i<layers.length; i++) {
             Layer layer = layers[i];
             layerEntities.put(layer, new ArrayList<>(1000));
+            layerViewports.put(layer, Optional.empty());
         }
 
         instance = this;
     }
 
+    public Engine(SpriteBatch mainBatch) {
+        this();
+        this.mainBatch = mainBatch;
+    }
+
     public void init() {}
 
-    public void render(float dt) {
+    public void setMainBatch(SpriteBatch mainBatch) {
+        this.mainBatch = mainBatch;
+    }
 
+    public SpriteBatch getMainBatch() { return mainBatch; }
+
+    public void render(float dt) {
+        // Headless mode
+        if(mainBatch == null) {
+            return;
+        }
 
         for(int i=0; i<layers.length; i++) {
             Layer layer = layers[i];

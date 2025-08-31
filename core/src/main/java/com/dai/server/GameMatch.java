@@ -92,7 +92,7 @@ public final class GameMatch extends Thread {
                     logger.info("Client sent: " + message.toString());
                 }
             } catch(Exception e) {
-                logger.error("Client has dropped, the game match will now end.");
+                logger.error("Client has dropped, the game match will now end. The error is: " + e.getMessage());
                 hasDroppedClients = true;
 
                 // Close the remaining connections

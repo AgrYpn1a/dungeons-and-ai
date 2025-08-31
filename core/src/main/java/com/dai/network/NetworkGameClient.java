@@ -93,4 +93,13 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
             .findFirst().get();
         netPawn.getPossessedPawn().setData(data);
     }
+
+    public void onPlayerPawnActionPointsChange(UUID netPawnId, int deltaPoints) throws RemoteException {
+        NetworkPawn netPawn = netPawns.stream()
+            .filter(p -> p.getId().equals(netPawnId))
+            .findFirst().get();
+
+        PlayerPawn playerPawn = (PlayerPawn) netPawn.getPossessedPawn();
+        playerPawn.consumeActionPoints(deltaPoints);
+    }
 }

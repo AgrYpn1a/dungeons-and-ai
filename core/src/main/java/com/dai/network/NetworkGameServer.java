@@ -10,14 +10,17 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 
 import com.badlogic.gdx.math.Vector2;
 import com.dai.PlayerPawn;
+import com.dai.PlayerPawn.EPlayerActionResult;
 import com.dai.ai.AStar;
 import com.dai.ai.ISearch;
+import com.dai.common.Config;
 import com.dai.server.GameMatch;
 import com.dai.world.Pawn.EPawnState;
 import com.dai.world.Pawn.PawnData;
@@ -36,15 +39,24 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 
     private ISearch search;
 
+	/** Used on client to fetch remote reference */
+	private static Registry registry;
+
     private static INetworkGameServer instance;
     public static INetworkGameServer getInstance() throws RemoteException {
         if(instance == null) {
 			try {
-				Registry registry = LocateRegistry.getRegistry(16000);
+				registry = LocateRegistry.getRegistry(16000);
 				INetworkGameServer netInstance = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
 				instance = netInstance;
+
+				logger.info("Fetched NetworkGameServer instance on client from RMI Registry.");
 			} catch(Exception e) {
 				instance = new NetworkGameServer();
+				logger.info("Created NetworkGameServer instance on server.");
+
+				logger.error(e.getMessage());
+				e.printStackTrace();
 			}
         }
 
@@ -143,12 +155,39 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 	}
 
 	@Override
-    public void doAction(UUID playerId, Vector2 target) throws RemoteException {
+    public EPlayerActionResult doAction(UUID playerId, Vector2 target) throws RemoteException {
+		/** Not current players turn */
+		if(!currentPlayer.equals(playerId)) {
+			return EPlayerActionResult.Failed;
+		}
+
 		Optional<NetworkPawn> pawn = netPawns.stream().filter(p -> p.getOwnerId().equals(playerId)).findFirst();
 		NetworkPawn netPawn = pawn.get();
 
 		Queue<Vector2> path = requestPath(playerId, target);
-		netPawn.getPossessedPawn().move(path);
+
+		/** TODO: Possible actions: move, attack, loot */
+
+		/** Move */
+		PlayerPawn playerPawn = (PlayerPawn) netPawn.getPossessedPawn();
+		int pathCost = World.getInstance().getPathCost(path);
+
+		// logger.info("Client " + playerId + " requested action of cost " + pathCost + "/" + playerPawn.getActionPoints());
+
+		if(playerPawn.consumeActionPoints(pathCost)) {
+
+			// Notify of action points consumed
+			for(Map.Entry<UUID, INetworkGameClient> entry : clients.entrySet()) {
+				INetworkGameClient client = entry.getValue();
+				client.onPlayerPawnActionPointsChange(netPawn.getId(), pathCost);
+			}
+
+			netPawn.getPossessedPawn().move(path);
+			// logger.info("Client " + playerId + " pawn will move. Remaining points: " + playerPawn.getActionPoints());
+			return EPlayerActionResult.Success;
+		}
+
+		return EPlayerActionResult.NotEnoughActionPoints;
 	}
 
 	@Override
@@ -159,6 +198,33 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 		} catch(ServerNotActiveException e) {
 			// In case this fails, we're on server!
 			return true;
+		}
+	}
+
+	@Override
+    public void endTurn(UUID playerId) throws RemoteException {
+		// TODO: Check if player's pawn is currently busy, and prevent
+		// end turn until pawn has finished any actions.
+		if(currentPlayer.equals(playerId)) {
+			Optional<Entry<UUID, INetworkGameClient>> nextPlayer = clients.entrySet().stream()
+				.filter(entry -> !entry.getKey().equals(playerId))
+				.findFirst();
+
+			currentPlayer = nextPlayer.get().getKey();
+
+			Optional<NetworkPawn> pawn = netPawns.stream()
+				.filter(p -> p.getOwnerId().equals(currentPlayer))
+				.findFirst();
+			NetworkPawn nextPlayersNetPawn = pawn.get();
+			PlayerPawn nextPlayersPawn = (PlayerPawn) nextPlayersNetPawn.getPossessedPawn();
+			nextPlayersPawn.consumeActionPoints(-Config.POINTS_PER_TURN);
+
+			// Notify of action points consumed
+			for(Map.Entry<UUID, INetworkGameClient> entry : clients.entrySet()) {
+				INetworkGameClient client = entry.getValue();
+				// Sending negative points will increment them instead
+				client.onPlayerPawnActionPointsChange(nextPlayersNetPawn.getId(), -Config.POINTS_PER_TURN);
+			}
 		}
 	}
 
@@ -180,6 +246,17 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 				for(Map.Entry<UUID, INetworkGameClient> entry : clients.entrySet()) {
 					INetworkGameClient client = entry.getValue();
 					client.onSpawnPawn(netPawn.getId(), location, playerId, isPlayer);
+				}
+
+				// Initialise action points for first player
+				if(playerId.equals(currentPlayer)) {
+					pawnPlayer.consumeActionPoints(-Config.POINTS_PER_TURN);
+
+					for(Map.Entry<UUID, INetworkGameClient> entry : clients.entrySet()) {
+						INetworkGameClient currClient = entry.getValue();
+						// Sending negative points will increment them instead
+						currClient.onPlayerPawnActionPointsChange(netPawn.getId(), -Config.POINTS_PER_TURN);
+					}
 				}
 			} catch(Exception e) {}
 		}

@@ -12,6 +12,10 @@ public class RenderComponent implements IComponent {
         this.texture = texture;
     }
 
+    public void setTexture(TextureRegion texture) {
+        this.texture = texture;
+    }
+
     public TextureRegion getTexture() { return this.texture; }
 
 	@Override

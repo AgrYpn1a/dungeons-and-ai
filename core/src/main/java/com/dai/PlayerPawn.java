@@ -12,6 +12,16 @@ import com.dai.world.Pawn;
 import com.dai.world.World;
 
 public final class PlayerPawn extends Pawn {
+
+    public static enum EPlayerActionResult {
+        Success,
+        Failed,
+        NotEnoughActionPoints
+    }
+
+    /** Stats */
+    private int actionPoints = 0;
+
     public PlayerPawn(Vector2 pos, boolean isOpponent) {
         super(new PawnData());
 
@@ -58,5 +68,20 @@ public final class PlayerPawn extends Pawn {
             );
         }
     }
+
+    public int getActionPoints() { return actionPoints; }
+    public boolean consumeActionPoints(int points) {
+        int newPoints = actionPoints - points;
+        if(newPoints >= 0) {
+            actionPoints = newPoints;
+            return true;
+        }
+
+        return false;
+    }
+
+    // public boolean (int cost) {
+    //     return actionPoints
+    // }
 
 }

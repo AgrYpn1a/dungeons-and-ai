@@ -64,6 +64,9 @@ public final class DAIGameClient extends DAIGameCore {
     public void create() {
         super.create();
 
+        logger.info("Calling create()");
+        System.out.println("Calling create()");
+
         TextureManager.getInstance().setTexture(new Texture("selenasdungeon32x32.png"));
 
         World.getInstance().init();
@@ -90,14 +93,15 @@ public final class DAIGameClient extends DAIGameCore {
                 messageQueue = new ConcurrentLinkedQueue<>();
 
                 /** Let the connection run in the background */
-                listener = new NetworkListener(in, messageQueue);
+                listener = new NetworkListener(in, out, messageQueue);
                 listener.setDaemon(true);
                 listener.start();
 
-            } catch(IOException e) {
+            } catch(Exception e) {
+                logger.error(e.getMessage());
                 e.printStackTrace();
             } finally {
-                try { ss.close(); } catch(Exception e) {}
+                // try { ss.close(); } catch(Exception e) {}
             }
         }
 
@@ -142,23 +146,28 @@ public final class DAIGameClient extends DAIGameCore {
      * Let's introduce a NetworkManager to handle all networked objects.
      *
      */
-    private Registry registry;
+    // private Registry registry;
     private INetworkGameServer netGameServer;
     private INetworkGameClient netGameClient;
 
     private void handleMessage(NetworkData nData) {
         EDAIProtocol message = nData.type;
+        logger.info("[handleMessage] -> Got " + message);
+        System.out.println("[handleMessage] -> Got " + message);
 
         /** This should be the first message coming from the server */
         if(message == EDAIProtocol.Connected) {
             try {
 
                 // Connect to registry
-                registry = LocateRegistry.getRegistry( 16000);
-                logger.info(registry.toString());
+                // registry = LocateRegistry.getRegistry( 16000);
+                // logger.info(registry.toString());
 
                 // Get remote NetworkGame
-                netGameServer = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
+                // netGameServer = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
+
+                logger.info("[EDAIProtocol.Connected] -> Trying to get NetworkGameServer and NetworkGameClient instances.");
+                netGameServer = NetworkGameServer.getInstance();
                 netGameClient = NetworkGameClient.getInstance();
 
                 netGameServer.registerClient(netGameClient);

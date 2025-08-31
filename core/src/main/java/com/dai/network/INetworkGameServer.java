@@ -6,6 +6,7 @@ import java.util.Queue;
 import java.util.UUID;
 
 import com.badlogic.gdx.math.Vector2;
+import com.dai.PlayerPawn.EPlayerActionResult;
 
 public interface INetworkGameServer extends Remote {
 
@@ -17,5 +18,7 @@ public interface INetworkGameServer extends Remote {
 
     public Queue<Vector2> requestPath(UUID playerId, Vector2 target) throws RemoteException;
 
-    public void doAction(UUID playerId, Vector2 target) throws RemoteException;
+    public EPlayerActionResult doAction(UUID playerId, Vector2 target) throws RemoteException;
+
+    public void endTurn(UUID playerId) throws RemoteException;
 }

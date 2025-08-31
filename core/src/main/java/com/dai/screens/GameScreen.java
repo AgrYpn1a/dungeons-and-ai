@@ -2,6 +2,7 @@ package com.dai.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -14,9 +15,13 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.dai.PlayerController;
+import com.dai.PlayerPawn;
 import com.dai.UIManager;
 import com.dai.engine.Engine;
 import com.dai.engine.Engine.Layer;
+import com.dai.network.NetworkGameClient;
+import com.dai.network.NetworkGameServer;
 import com.dai.world.World;
 
 /** First screen of the application. Displayed after the application is created. */
@@ -88,19 +93,54 @@ public final class GameScreen implements Screen {
         Vector3 screenCoords = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         Vector3 worldCoords = viewport.unproject(screenCoords);
 
-        font.draw(
-            batch,
-            "Mouse at (" + worldCoords.x + ", " + worldCoords.y + ")",
-            25, Gdx.graphics.getHeight() - 25, 100,
-            Align.topLeft,
-            false);
+        PlayerPawn playerPawn = PlayerController.getInstance().getPlayerPawn();
+        if(playerPawn != null) {
+            font.draw(
+                batch,
+                String.format("| Action Points = %d", playerPawn.getActionPoints()),
+                25, Gdx.graphics.getHeight() - 25, 100,
+                Align.topLeft,
+                false);
 
-        font.draw(
-            batch,
-            "UIManager Mouse at (" + UIManager.getInstance().getMouseWorldPos().x + ", " + UIManager.getInstance().getMouseWorldPos().y + ")",
-             25, Gdx.graphics.getHeight() - 50, 100,
-            Align.topLeft,
-            false);
+            font.draw(
+                batch,
+                String.format("| Health = %d", playerPawn.getData().health),
+                25, Gdx.graphics.getHeight() - 50, 100,
+                Align.topLeft,
+                false);
+
+            // Render turn information
+            boolean myTurn = false;
+            try {
+                myTurn = NetworkGameServer.getInstance().isMyTurn(NetworkGameClient.getInstance().getId());
+            } catch(Exception e) { /* TODO */ }
+
+            if(myTurn) {
+                font.setColor(Color.GREEN);
+            } else {
+                font.setColor(Color.RED);
+            }
+            font.draw(
+                batch,
+                String.format("<TURN: %s", myTurn ? "My>" : "Opponnent's>"),
+                (Gdx.graphics.getWidth() - 100) / 2, Gdx.graphics.getHeight() - 15, 100,
+                Align.top,
+                false);
+        }
+
+        // font.draw(
+        //     batch,
+        //     "Mouse at (" + worldCoords.x + ", " + worldCoords.y + ")",
+        //     25, Gdx.graphics.getHeight() - 25, 100,
+        //     Align.topLeft,
+        //     false);
+
+        // font.draw(
+        //     batch,
+        //     "UIManager Mouse at (" + UIManager.getInstance().getMouseWorldPos().x + ", " + UIManager.getInstance().getMouseWorldPos().y + ")",
+        //      25, Gdx.graphics.getHeight() - 50, 100,
+        //     Align.topLeft,
+        //     false);
 
         batch.end();
     }

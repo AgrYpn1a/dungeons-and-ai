@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.stream.Stream;
 
 import com.badlogic.gdx.graphics.Texture;
@@ -79,6 +80,19 @@ public class World {
         return tiles[y][x];
     }
 
+    public ITraversable getTraversableAtPoint(Vector2 point) {
+        Vector2 gridPos = toGridPos(new Vector3(point.x, point.y, 0));
+
+        int x = (int)gridPos.x;
+        int y = (int)gridPos.y;
+
+        if(y >= tiles.length || x >= tiles[0].length || y < 0 || x < 0) {
+            return null;
+        }
+
+        return (ITraversable)tiles[y][x];
+    }
+
     public List<ITraversable> getNeighbours(ITraversable node) {
         List<ITraversable> neighbours = new LinkedList<>();
 
@@ -121,5 +135,17 @@ public class World {
         int y = Math.round((point.y - TILE_SIZE / 2) / TILE_SIZE);
 
         return new Vector2(x, y);
+    }
+
+    public int getPathCost(Queue<Vector2> path) {
+        int cost = 0;
+
+        for(Vector2 pos : path) {
+            ITraversable t = (ITraversable) getEntityAtPoint(new Vector3(pos.x, pos.y, 0));
+            int currCost = 1 * t.getCostModifier();
+            cost += currCost;
+        }
+
+        return cost;
     }
 }

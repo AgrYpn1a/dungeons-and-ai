@@ -8,6 +8,6 @@ public interface ITraversable {
 
     public boolean isTraversable();
 
-    public float getCostModifier();
+    public int getCostModifier();
 
 }

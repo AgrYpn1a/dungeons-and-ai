@@ -48,6 +48,14 @@ public final class TextureManager {
             return new TextureRegion(texture, 3 * World.TILE_SIZE, 2 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
         }
 
+        if(indicatorType == EIndicator.PathUnreachableMarker) {
+            return new TextureRegion(texture, 2 * World.TILE_SIZE, 2 * World.TILE_SIZE, World.TILE_SIZE, World.TILE_SIZE);
+        }
+
+        if(indicatorType == EIndicator.PathTargetMarker) {
+            return getIndicator();
+        }
+
         // Empty region as default, for now.
         return new TextureRegion(texture, 3 * World.TILE_SIZE, 0, World.TILE_SIZE, World.TILE_SIZE);
     }

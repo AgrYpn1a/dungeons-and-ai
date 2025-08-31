@@ -19,4 +19,6 @@ public interface INetworkGameClient extends Remote {
     public void onPawnStateChange(UUID netPawnId, EPawnState state) throws RemoteException;
 
     public void onPawnDataChange(UUID netPawnId, PawnData state) throws RemoteException;
+
+    public void onPlayerPawnActionPointsChange(UUID netPawnId, int deltaPoints) throws RemoteException;
 }

@@ -19,9 +19,9 @@ public class Tile extends Entity implements ITraversable, Serializable {
         this.AddComponent(new RenderComponent(texture));
 
         // Disable rendering on server
-        if(NetworkManager.isServer()) {
-            this.setShouldRender(false);
-        }
+        // if(NetworkManager.isServer()) {
+        //     this.setShouldRender(false);
+        // }
     }
 
     /** {@link ITraversable} */
@@ -32,8 +32,8 @@ public class Tile extends Entity implements ITraversable, Serializable {
     }
 
     @Override
-    public float getCostModifier() {
-        return 1.0f;
+    public int getCostModifier() {
+        return 1;
     }
 
     // @Override

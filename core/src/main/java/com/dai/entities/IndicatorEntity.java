@@ -15,7 +15,9 @@ import com.dai.engine.Engine.Layer;
 public final class IndicatorEntity extends Entity {
 
     public static enum EIndicator {
-        PathMarker;
+        PathMarker,
+        PathTargetMarker,
+        PathUnreachableMarker
     }
 
     private EIndicator indicatorType;
@@ -28,6 +30,20 @@ public final class IndicatorEntity extends Entity {
     }
 
     public EIndicator getIndicatorType() { return indicatorType; }
+
+    public void changeType(EIndicator indicatorType) {
+
+        // A slight optimization
+        if(this.indicatorType == indicatorType) {
+            return;
+        }
+
+        Optional<RenderComponent> r = this.getComponent(RenderComponent.id);
+        if(!r.isEmpty()) {
+            r.get().setTexture(TextureManager.getInstance().getIndicator(indicatorType));
+            this.indicatorType = indicatorType;
+        }
+    }
 
     @Override
     public void registerEntity() {

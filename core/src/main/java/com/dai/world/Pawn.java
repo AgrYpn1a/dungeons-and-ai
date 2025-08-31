@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import com.badlogic.gdx.math.Vector2;
 import com.dai.engine.Entity;
+import com.dai.network.NetworkManager;
 
 public class Pawn extends Entity {
 
@@ -49,6 +50,8 @@ public class Pawn extends Entity {
         this.data = data;
     }
 
+    public PawnData getData() { return this.data; }
+
     public void move(Queue<Vector2> path) {
        this.state = EPawnState.Busy;
        this.path = path;
@@ -72,7 +75,10 @@ public class Pawn extends Entity {
                 moveTick = 0f;
                 Vector2 newPosition = path.poll();
                 setPosition(newPosition);
-                onPositionChanged.accept(newPosition);
+
+                if(onPositionChanged != null) {
+                    onPositionChanged.accept(newPosition);
+                }
 
                 if(path.isEmpty()) {
                     state = EPawnState.Ready;

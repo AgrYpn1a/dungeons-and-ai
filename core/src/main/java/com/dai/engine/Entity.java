@@ -17,6 +17,7 @@ public abstract class Entity extends Transform2D implements ITickable {
     protected Transform2D transform;
     protected List<IComponent> components;
     protected boolean shouldRender = true;
+    protected Layer layer = Layer.Default;
 
     protected Entity() {
         super();
@@ -30,13 +31,14 @@ public abstract class Entity extends Transform2D implements ITickable {
 
     /** Override this method, in order to change rendering layer */
     public void registerEntity() {
-        Engine.getInstance().registerEntity(Layer.Default, this);
+        Engine.getInstance().registerEntity(layer, this);
     }
 
     public Transform2D getTransform() { return this.transform; }
 
-    public void AddComponent(IComponent component) {
+    public <T extends IComponent> T AddComponent(T component) {
         this.components.add(component);
+        return component;
     }
 
     public List<IComponent> getComponents() { return this.components; }
@@ -77,4 +79,8 @@ public abstract class Entity extends Transform2D implements ITickable {
 
     public boolean shouldRender() { return shouldRender; }
     public void setShouldRender(boolean shouldRender ) { this.shouldRender = shouldRender; }
+
+    public void destroy() {
+       Engine.getInstance().destroyEntity(layer, this);
+    }
 }

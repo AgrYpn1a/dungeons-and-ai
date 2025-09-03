@@ -22,6 +22,7 @@ import com.dai.engine.Engine;
 import com.dai.engine.Engine.Layer;
 import com.dai.network.NetworkGameClient;
 import com.dai.network.NetworkGameServer;
+import com.dai.network.NetworkManager;
 import com.dai.world.World;
 
 /** First screen of the application. Displayed after the application is created. */
@@ -110,7 +111,7 @@ public final class GameScreen implements Screen {
                 false);
 
             // Render turn information
-            boolean myTurn = false;
+            boolean myTurn = NetworkManager.isOffline();
             try {
                 myTurn = NetworkGameServer.getInstance().isMyTurn(NetworkGameClient.getInstance().getId());
             } catch(Exception e) { /* TODO */ }

@@ -21,6 +21,7 @@ import com.dai.engine.ITickable;
 import com.dai.engine.RenderComponent;
 import com.dai.world.World;
 import com.dai.world.Pawn.EPawnState;
+import com.dai.world.Tile;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -102,7 +103,9 @@ public final class PlayerController implements ITickable {
         Engine.getInstance().registerTickable(this);
         Gdx.input.setInputProcessor(input);
 
-        search = new AStar();
+        if(NetworkManager.isOffline()) {
+            search = new AStar();
+        }
 
         instance = this;
     }
@@ -120,6 +123,10 @@ public final class PlayerController implements ITickable {
 
     public void setPlayerPawn(PlayerPawn pawn) {
         this.myPlayerPawn = pawn;
+
+        if(NetworkManager.isOffline()) {
+            myPlayerPawn.consumeActionPoints(-Integer.MAX_VALUE);
+        }
     }
 
     public void setPlayerData(PlayerData playerData) {
@@ -136,6 +143,9 @@ public final class PlayerController implements ITickable {
 
     @Override
     public void tick(float deltaTime) {
+        if(!World.getInstance().isInit()) {
+            return;
+        }
 
         // Networking not initialised yet and not in offline mode!
         if(!NetworkManager.isOffline() && networkGame == null) {
@@ -144,11 +154,11 @@ public final class PlayerController implements ITickable {
 
         if(!NetworkManager.isServer()) {
             Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
-            Entity e = World.getInstance().getEntityAtPoint(mousePos);
+            Tile tile = World.getInstance().getTileAtPoint(mousePos);
 
             // Render action indicator over an entity in the world
-            if(e != null) {
-                actionIndicator.setPosition(World.toWorldPos(e.getPosition()));
+            if(tile != null) {
+                actionIndicator.setPosition(World.toWorldPos(tile.getPosition()));
             }
         }
     }
@@ -156,7 +166,7 @@ public final class PlayerController implements ITickable {
     private boolean canDoAction() {
         try {
             // Network checks
-            if(!NetworkManager.isServer() && networkGame.isMyTurn(NetworkGameClient.getInstance().getId()) || NetworkManager.isOffline()) {
+            if(NetworkManager.isOffline() || !NetworkManager.isServer() && networkGame.isMyTurn(NetworkGameClient.getInstance().getId())) {
 
                 // Actual gameplay checks
                 return myPlayerPawn.getState() == EPawnState.Ready;
@@ -216,7 +226,7 @@ public final class PlayerController implements ITickable {
         logger.info("Processing MAIN_ACTION");
 
         Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
-        Entity e = World.getInstance().getEntityAtPoint(mousePos);
+        Entity e = World.getInstance().getTileAtPoint(mousePos);
 
         if(NetworkManager.isOffline()) {
             int playerX = (int) myPlayerPawn.getPosition().x;

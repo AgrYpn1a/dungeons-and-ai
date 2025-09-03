@@ -7,10 +7,13 @@ import java.util.UUID;
 import com.badlogic.gdx.math.Vector2;
 import com.dai.world.Pawn.EPawnState;
 import com.dai.world.Pawn.PawnData;
+import com.dai.world.Tile.TileData;
 
 public interface INetworkGameClient extends Remote {
 
     public UUID getId() throws RemoteException;
+
+    public void onGenerateWorld(TileData[][] data) throws RemoteException;
 
 	public void onSpawnPawn(UUID netPawnId, Vector2 location, UUID playerId, boolean isPlayer) throws RemoteException;
 

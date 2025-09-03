@@ -1,8 +1,6 @@
 package com.dai.world;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,15 +8,15 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Stream;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.dai.TextureManager;
+import com.dai.ai.AStar;
+import com.dai.ai.ISearch;
 import com.dai.ai.ITraversable;
-import com.dai.engine.Engine;
 import com.dai.engine.Entity;
-import com.dai.engine.Engine.Layer;
+import com.dai.world.Tile.TileData;
+import com.dai.world.Tile.TileType;
 
 public class World {
     public static World instance;
@@ -35,6 +33,7 @@ public class World {
     public static final float CAMERA_ZOOM = 1.5f;
 
     private Tile[][] tiles;
+    private boolean isInit = false;
 
     // private final TextureRegion textureGround;
     // private final TextureRegion textureWallVertical;
@@ -44,21 +43,85 @@ public class World {
 
     private World() {
         entities = new HashMap<>();
+    }
 
-        this.tiles = new Tile[WORLD_SIZE][WORLD_SIZE];
+    public void init() {
+        generateWorld();
+    }
+
+    public Tile[][] getTiles() { return tiles; }
+
+    public boolean isInit() { return isInit; }
+
+    public void generateWorld() {
+        tiles = new Tile[WORLD_SIZE][WORLD_SIZE];
+
         for(int y=0; y<WORLD_SIZE; y++) {
             for(int x=0; x<WORLD_SIZE; x++) {
-                this.tiles[y][x] = new Tile(
+                Tile tile = new Tile(
                     TextureManager.getInstance().getGroundTile(),
                     new Vector2(x, y)
                 );
+                tiles[y][x] = tile;
             }
         }
+
+        /*
+        * A very primitive random tile generator.
+        *
+        * TODO: If there's enough time turn this into something
+        * that actually works properly.
+        */
+
+        /** Generate moss paths */
+        ISearch search = new AStar(tiles);
+        Queue<Vector2> mossPathA = search.findPath(tiles[1][1], tiles[12][8]);
+        for(Vector2 pos : mossPathA) {
+            tiles[(int) pos.y][(int) pos.x].setType(TileType.Moss);
+        }
+
+        Queue<Vector2> mossPathB = search.findPath(tiles[1][12], tiles[12][3]);
+        for(Vector2 pos : mossPathB) {
+            tiles[(int) pos.y][(int) pos.x].setType(TileType.Moss);
+        }
+
+        /** Generate holes and rocks */
+        // TODO: Move this into its own config ?
+        final int maxHoles = 12;
+        final int maxRocks = 6;
+
+        int holesCount = 12;
+        int rockCount = 6;
+
+        for(int y=0; y<WORLD_SIZE; y++) {
+            for(int x=0; x<WORLD_SIZE; x++) {
+                Tile tile = tiles[y][x];
+
+                // Make sure we do not generate near the edges
+                if(x > 3 && y > 3) {
+                    // float mossFactor = (float) mossCount / maxMossTiles;
+                    float holeFactor = (float) holesCount / maxHoles;
+                    float rockFactor = (float) rockCount / maxRocks;
+
+                    float random = (float) Math.random();
+
+                    if(holeFactor >= rockFactor) {
+                        if(holeFactor > random) {
+                            tile.setType(TileType.Hole);
+                            holesCount--;
+                        }
+                    } else if(rockFactor >= holeFactor) {
+                        if(rockFactor > random) {
+                            tile.setType(TileType.Rock);
+                            rockCount--;
+                        }
+                    }
+                }
+            }
+        }
+
+        isInit = true;
     }
-
-    public void init() {}
-
-    public Tile[][] getTiles() { return tiles; }
 
     public Stream<Entity> getEntities() {
         Stream<Entity> tiles = Arrays.stream(this.tiles).flatMap(Arrays::stream);
@@ -67,7 +130,7 @@ public class World {
         return Stream.concat(tiles, worldEntities);
     }
 
-    public Entity getEntityAtPoint(Vector3 point) {
+    public Tile getTileAtPoint(Vector3 point) {
         Vector2 gridPos = toGridPos(point);
 
         int x = (int)gridPos.x;
@@ -92,6 +155,19 @@ public class World {
 
         return (ITraversable)tiles[y][x];
     }
+
+    // public Entity getEntityAtPoint(Vector3 point) {
+    //     Vector2 gridPos = toGridPos(point);
+
+    //     int x = (int)gridPos.x;
+    //     int y = (int)gridPos.y;
+
+    //     if(y >= tiles.length || x >= tiles[0].length || y < 0 || x < 0) {
+    //         return null;
+    //     }
+
+    //     return tiles[y][x];
+    // }
 
     public List<ITraversable> getNeighbours(ITraversable node) {
         List<ITraversable> neighbours = new LinkedList<>();
@@ -141,11 +217,42 @@ public class World {
         int cost = 0;
 
         for(Vector2 pos : path) {
-            ITraversable t = (ITraversable) getEntityAtPoint(new Vector3(pos.x, pos.y, 0));
+            ITraversable t = (ITraversable) getTileAtPoint(new Vector3(pos.x, pos.y, 0));
             int currCost = 1 * t.getCostModifier();
             cost += currCost;
         }
 
         return cost;
+    }
+
+    public TileData[][] exportWorld() {
+        TileData[][] data = new TileData[tiles.length][tiles[0].length];
+
+        for(int y=0; y<WORLD_SIZE; y++) {
+            for(int x=0; x<WORLD_SIZE; x++) {
+                data[y][x] = tiles[y][x].getTileData();
+            }
+        }
+
+        return data;
+    }
+
+    public void importWorld(TileData[][] data) {
+        tiles = new Tile[WORLD_SIZE][WORLD_SIZE];
+
+        for(int y=0; y<WORLD_SIZE; y++) {
+            for(int x=0; x<WORLD_SIZE; x++) {
+                Tile tile = new Tile(data[y][x]);
+
+                // We need to replace old tiles
+                if(tiles[y][x] != null) {
+                    tiles[y][x].destroy();
+                }
+
+                tiles[y][x] = tile;
+            }
+        }
+
+        isInit = true;
     }
 }

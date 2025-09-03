@@ -15,6 +15,7 @@ import com.dai.world.World;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.dai.world.Tile.TileData;
 
 public final class NetworkGameClient extends UnicastRemoteObject implements INetworkGameClient {
     private static final Logger logger = LoggerFactory.getLogger(NetworkGameClient.class);
@@ -35,6 +36,11 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
     }
 
     public UUID getPlayerId() { return id; }
+
+	@Override
+	public void onGenerateWorld(TileData[][] data) throws RemoteException {
+        World.getInstance().importWorld(data);
+	}
 
 	@Override
 	public void onSpawnPawn(UUID netPawnId, Vector2 location, UUID playerId, boolean isPlayer) throws RemoteException {

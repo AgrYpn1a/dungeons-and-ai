@@ -22,6 +22,7 @@ import com.dai.engine.Engine;
 import com.dai.engine.Engine.Layer;
 import com.dai.network.NetworkGameClient;
 import com.dai.network.NetworkGameServer;
+import com.dai.network.NetworkManager;
 import com.dai.world.World;
 
 /** First screen of the application. Displayed after the application is created. */
@@ -95,22 +96,22 @@ public final class GameScreen implements Screen {
 
         PlayerPawn playerPawn = PlayerController.getInstance().getPlayerPawn();
         if(playerPawn != null) {
-            font.draw(
-                batch,
-                String.format("| Action Points = %d", playerPawn.getActionPoints()),
-                25, Gdx.graphics.getHeight() - 25, 100,
-                Align.topLeft,
-                false);
+            // font.draw(
+            //     batch,
+            //     String.format("| Action Points = %d", playerPawn.getActionPoints()),
+            //     25, Gdx.graphics.getHeight() - 25, 100,
+            //     Align.topLeft,
+            //     false);
 
-            font.draw(
-                batch,
-                String.format("| Health = %d", playerPawn.getData().health),
-                25, Gdx.graphics.getHeight() - 50, 100,
-                Align.topLeft,
-                false);
+            // font.draw(
+            //     batch,
+            //     String.format("| Health = %d", playerPawn.getData().health),
+            //     25, Gdx.graphics.getHeight() - 50, 100,
+            //     Align.topLeft,
+            //     false);
 
             // Render turn information
-            boolean myTurn = false;
+            boolean myTurn = NetworkManager.isOffline();
             try {
                 myTurn = NetworkGameServer.getInstance().isMyTurn(NetworkGameClient.getInstance().getId());
             } catch(Exception e) { /* TODO */ }

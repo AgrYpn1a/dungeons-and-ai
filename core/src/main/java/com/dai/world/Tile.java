@@ -6,42 +6,80 @@ import java.util.Optional;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.dai.TextureManager;
 import com.dai.ai.ITraversable;
 import com.dai.engine.Entity;
 import com.dai.engine.RenderComponent;
 import com.dai.network.NetworkManager;
 
 public class Tile extends Entity implements ITraversable, Serializable {
+
+    public static enum TileType {
+        Ground,
+        Hole,
+        Rock,
+        Moss
+    }
+
+    public static class TileData implements Serializable {
+        public Vector2 position;
+        public TileType type;
+    }
+
+    private TileType type = TileType.Ground;
+    private RenderComponent renderer;
+
     public Tile(TextureRegion texture, Vector2 position) {
         super();
 
-        this.transform.setPosition(position);
-        this.AddComponent(new RenderComponent(texture));
+        transform.setPosition(position);
+        renderer = this.AddComponent(new RenderComponent(texture));
 
+        // TODO
         // Disable rendering on server
         // if(NetworkManager.isServer()) {
         //     this.setShouldRender(false);
         // }
     }
 
-    /** {@link ITraversable} */
+    public Tile(TileData data) {
+        super();
+
+
+        // TODO
+        // Disable rendering on server
+        // if(NetworkManager.isServer()) {
+        //     this.setShouldRender(false);
+        // }
+
+        renderer = this.AddComponent(new RenderComponent(TextureManager.getInstance().getTile(data.type)));
+
+        transform.setPosition(data.position);
+        type = data.type;
+    }
+
+    public TileData getTileData() {
+        TileData data = new TileData();
+        data.position = transform.getPosition();
+        data.type = type;
+
+        return data;
+    }
+
     @Override
     public boolean isTraversable() {
-        // TODO: Calculate for different tiles
-        return true;
+        return type == TileType.Ground || type == TileType.Moss;
     }
 
     @Override
     public int getCostModifier() {
+        if(type == TileType.Moss) {
+            return 2;
+        }
+
         return 1;
     }
 
-    // @Override
-    // public Vector2 getPosition() {
-    //     return this.transform.getPosition();
-    // }
-
-    /** {@link Object} */
     @Override
     public String toString() {
         return "Tile at (" + this.transform.getPosition().x +  ", " + this.transform.getPosition().y + ")";
@@ -49,15 +87,20 @@ public class Tile extends Entity implements ITraversable, Serializable {
 
     @Override
     public void render(SpriteBatch batch, float deltaTime) {
-        Optional<RenderComponent> r = this.getComponent(RenderComponent.id);
-        if(r.get() != null) {
+        if(renderer != null) {
             Vector2 worldPos = World.toWorldPos(this.getTransform().getPosition());
             batch.draw(
-                r.get().getTexture(),
+                renderer.getTexture(),
                 worldPos.x,
                 worldPos.y
             );
         }
     }
 
+    public void setType(TileType newType) {
+        if(renderer != null) {
+            renderer.setTexture(TextureManager.getInstance().getTile(newType));
+            type = newType;
+        }
+    }
 }

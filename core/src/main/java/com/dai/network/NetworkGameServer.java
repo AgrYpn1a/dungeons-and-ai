@@ -45,18 +45,23 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
     private static INetworkGameServer instance;
     public static INetworkGameServer getInstance() throws RemoteException {
         if(instance == null) {
-			try {
-				registry = LocateRegistry.getRegistry(16000);
-				INetworkGameServer netInstance = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
-				instance = netInstance;
 
-				logger.info("Fetched NetworkGameServer instance on client from RMI Registry.");
-			} catch(Exception e) {
+			if(NetworkManager.isOffline()) {
 				instance = new NetworkGameServer();
-				logger.info("Created NetworkGameServer instance on server.");
+			} else{
+				try {
+					registry = LocateRegistry.getRegistry(16000);
+					INetworkGameServer netInstance = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
+					instance = netInstance;
 
-				logger.error(e.getMessage());
-				e.printStackTrace();
+					logger.info("Fetched NetworkGameServer instance on client from RMI Registry.");
+				} catch(Exception e) {
+					instance = new NetworkGameServer();
+					logger.info("Created NetworkGameServer instance on server.");
+
+					logger.error(e.getMessage());
+					e.printStackTrace();
+				}
 			}
         }
 
@@ -106,6 +111,7 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 			// p2PawnData.health = 10;
 
 			try {
+				INetworkGameClient client1 = (INetworkGameClient) clients.values().toArray()[0];
 				UUID p1Id = (UUID)clients.keySet().toArray()[0];
 				NetworkPawn netPawn1 = new NetworkPawn(p1NetId);
 				netPawn1.setOwnerId(p1Id);
@@ -115,6 +121,7 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 					p1Id,
 					true);
 
+				INetworkGameClient client2 = (INetworkGameClient) clients.values().toArray()[1];
 				UUID p2Id = (UUID)clients.keySet().toArray()[1];
 				NetworkPawn netPawn2 = new NetworkPawn(p2NetId);
 				netPawn2.setOwnerId(p2Id);
@@ -123,6 +130,10 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 					new Vector2(World.WORLD_SIZE - 1, World.WORLD_SIZE - 1),
 					p2Id,
 					true);
+
+
+				client1.onGenerateWorld(World.getInstance().exportWorld());
+				client2.onGenerateWorld(World.getInstance().exportWorld());
 			} catch(Exception e) {
 				logger.error(e.getMessage());
 			}

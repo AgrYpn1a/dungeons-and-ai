@@ -122,6 +122,12 @@ public final class Engine {
         tickables.add(entity);
     }
 
+    public void destroyEntity(Layer layer, Entity entity) {
+        // TODO: Need to add queue for destroying entities
+        layerEntities.get(layer).remove(entity);
+        tickables.remove(entity);
+    }
+
     public void registerTickable(ITickable t) {
         tickables.add(t);
     }

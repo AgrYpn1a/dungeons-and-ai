@@ -21,6 +21,7 @@ import com.dai.engine.ITickable;
 import com.dai.engine.RenderComponent;
 import com.dai.world.World;
 import com.dai.world.Pawn.EPawnState;
+import com.dai.world.Tile;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -59,8 +60,9 @@ public final class PlayerController implements ITickable {
     private List<IndicatorEntity> cachedPathMarkers = new ArrayList<>();
 
     private ISearch search;
+
     private PlayerPawn myPlayerPawn;
-    private PlayerData playerData;
+    private PlayerPawn opponentPawn;
 
     /** Gameplay */
     private Vector2 target = null;
@@ -102,7 +104,9 @@ public final class PlayerController implements ITickable {
         Engine.getInstance().registerTickable(this);
         Gdx.input.setInputProcessor(input);
 
-        search = new AStar();
+        if(NetworkManager.isOffline()) {
+            search = new AStar();
+        }
 
         instance = this;
     }
@@ -113,17 +117,29 @@ public final class PlayerController implements ITickable {
 
     public void init(PlayerPawn pawn, PlayerData playerData) {
         this.myPlayerPawn = pawn;
-        this.playerData = playerData;
+        // this.playerData = playerData;
 
         logger.info("Initialized with args (offline mode).");
     }
 
     public void setPlayerPawn(PlayerPawn pawn) {
-        this.myPlayerPawn = pawn;
+        myPlayerPawn = pawn;
+
+        if(NetworkManager.isOffline()) {
+            myPlayerPawn.consumeActionPoints(-Integer.MAX_VALUE);
+        }
     }
 
+    public boolean hasPawn() { return myPlayerPawn != null; }
+
+    public void setOpponentPawn(PlayerPawn pawn) { opponentPawn = pawn; }
+
+    public PlayerPawn getPlayerPawn() { return myPlayerPawn; }
+
+    public PlayerPawn getOpponentPawn() { return opponentPawn; }
+
     public void setPlayerData(PlayerData playerData) {
-        this.playerData = playerData;
+        // this.playerData = playerData;
     }
 
     public void initNetworking(INetworkGameServer networkGame) throws Exception {
@@ -132,10 +148,11 @@ public final class PlayerController implements ITickable {
         this.networkGame = networkGame;
     }
 
-    public boolean hasPawn() { return myPlayerPawn != null; }
-
     @Override
     public void tick(float deltaTime) {
+        if(!World.getInstance().isInit()) {
+            return;
+        }
 
         // Networking not initialised yet and not in offline mode!
         if(!NetworkManager.isOffline() && networkGame == null) {
@@ -144,11 +161,11 @@ public final class PlayerController implements ITickable {
 
         if(!NetworkManager.isServer()) {
             Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
-            Entity e = World.getInstance().getEntityAtPoint(mousePos);
+            Tile tile = World.getInstance().getTileAtPoint(mousePos);
 
             // Render action indicator over an entity in the world
-            if(e != null) {
-                actionIndicator.setPosition(World.toWorldPos(e.getPosition()));
+            if(tile != null) {
+                actionIndicator.setPosition(World.toWorldPos(tile.getPosition()));
             }
         }
     }
@@ -156,7 +173,7 @@ public final class PlayerController implements ITickable {
     private boolean canDoAction() {
         try {
             // Network checks
-            if(!NetworkManager.isServer() && networkGame.isMyTurn(NetworkGameClient.getInstance().getId()) || NetworkManager.isOffline()) {
+            if(NetworkManager.isOffline() || !NetworkManager.isServer() && networkGame.isMyTurn(NetworkGameClient.getInstance().getId())) {
 
                 // Actual gameplay checks
                 return myPlayerPawn.getState() == EPawnState.Ready;
@@ -216,7 +233,7 @@ public final class PlayerController implements ITickable {
         logger.info("Processing MAIN_ACTION");
 
         Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
-        Entity e = World.getInstance().getEntityAtPoint(mousePos);
+        Entity e = World.getInstance().getTileAtPoint(mousePos);
 
         if(NetworkManager.isOffline()) {
             int playerX = (int) myPlayerPawn.getPosition().x;
@@ -292,7 +309,5 @@ public final class PlayerController implements ITickable {
             logger.error(e.getMessage());
         }
     }
-
-    public PlayerPawn getPlayerPawn() { return myPlayerPawn; }
 
 }

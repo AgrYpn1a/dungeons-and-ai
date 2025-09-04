@@ -14,6 +14,7 @@ import com.dai.network.INetworkGameServer;
 import com.dai.network.NetworkGameClient;
 import com.dai.network.NetworkGameServer;
 import com.dai.network.NetworkListener;
+import com.dai.network.NetworkManager;
 import com.dai.network.NetworkListener.NetworkData;
 import com.dai.network.NetworkPawn;
 import com.dai.screens.GameScreen;
@@ -69,7 +70,11 @@ public final class DAIGameClient extends DAIGameCore {
 
         TextureManager.getInstance().setTexture(new Texture("selenasdungeon32x32.png"));
 
-        World.getInstance().init();
+        // We will not init world unless in offline mode,
+        // instead it should be imported from server
+        if(isOfflineMode) {
+            World.getInstance().init();
+        }
         PlayerController.getInstance().init();
 
         engine.setMainBatch(new SpriteBatch());
@@ -78,7 +83,7 @@ public final class DAIGameClient extends DAIGameCore {
         scrMainGame = new GameScreen();
         setScreen(scrMainGame);
 
-        UIManager.getInstance().init();
+        UIManager.getInstance().init(engine.getMainBatch());
 
         logger.info("create() called successfully.");
 

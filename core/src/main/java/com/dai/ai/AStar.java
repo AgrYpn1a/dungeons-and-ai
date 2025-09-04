@@ -69,6 +69,16 @@ public final class AStar implements ISearch {
         }
     }
 
+    public AStar(ITraversable[][] grid) {
+        this.grid = new Node[grid.length][grid[0].length];
+
+        for(int y=0; y<grid.length; y++) {
+            for (int x=0; x<grid[0].length; x++) {
+                this.grid[y][x] = new Node(grid[y][x]);
+            }
+        }
+    }
+
 	@Override
 	public Queue<Vector2> findPath(ITraversable start, ITraversable target) {
         Node startNode = new Node(start);
@@ -94,7 +104,7 @@ public final class AStar implements ISearch {
 
                 // The node has not been visited so far, nor has been added
                 // for further inspection in the frontier, we need to consider it
-                if(!frontier.contains(neighbour) && !visited.contains(neighbour)) {
+                if(currNode.isTraversable() && !frontier.contains(neighbour) && !visited.contains(neighbour)) {
 
                     // Expand the frontier
                     neighbour.cost = nextNodeCost;

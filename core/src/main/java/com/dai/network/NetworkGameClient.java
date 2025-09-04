@@ -9,12 +9,14 @@ import java.util.UUID;
 import com.badlogic.gdx.math.Vector2;
 import com.dai.PlayerController;
 import com.dai.PlayerPawn;
+import com.dai.UIManager;
 import com.dai.world.Pawn.EPawnState;
 import com.dai.world.Pawn.PawnData;
 import com.dai.world.World;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.dai.world.Tile.TileData;
 
 public final class NetworkGameClient extends UnicastRemoteObject implements INetworkGameClient {
     private static final Logger logger = LoggerFactory.getLogger(NetworkGameClient.class);
@@ -37,6 +39,11 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
     public UUID getPlayerId() { return id; }
 
 	@Override
+	public void onGenerateWorld(TileData[][] data) throws RemoteException {
+        World.getInstance().importWorld(data);
+	}
+
+	@Override
 	public void onSpawnPawn(UUID netPawnId, Vector2 location, UUID playerId, boolean isPlayer) throws RemoteException {
         logger.info("[id:" + id + "] " + "onSpawnPawn called with netPawnId: " + netPawnId + ", playerId " + playerId);
 
@@ -52,6 +59,7 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
                 // Make sure network pawn is controlling pawn
                 netPawn.possessPawn(pawnPlayer);
                 PlayerController.getInstance().setPlayerPawn(pawnPlayer);
+                UIManager.getInstance().setPlayerPawn(pawnPlayer);
             } else {
                 // Initialise opponent
                 PlayerPawn pawnPlayer = new PlayerPawn(new PawnData(), location, true);
@@ -59,6 +67,8 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
 
                 // Make sure network pawn is controlling pawn
                 netPawn.possessPawn(pawnPlayer);
+                PlayerController.getInstance().setOpponentPawn(pawnPlayer);
+                UIManager.getInstance().setOpponentPawn(pawnPlayer);
             }
         } else {
             // TODO: Spawn NPC pawn

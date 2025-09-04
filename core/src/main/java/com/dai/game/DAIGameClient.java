@@ -83,7 +83,7 @@ public final class DAIGameClient extends DAIGameCore {
         scrMainGame = new GameScreen();
         setScreen(scrMainGame);
 
-        UIManager.getInstance().init();
+        UIManager.getInstance().init(engine.getMainBatch());
 
         logger.info("create() called successfully.");
 

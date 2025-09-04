@@ -96,19 +96,19 @@ public final class GameScreen implements Screen {
 
         PlayerPawn playerPawn = PlayerController.getInstance().getPlayerPawn();
         if(playerPawn != null) {
-            font.draw(
-                batch,
-                String.format("| Action Points = %d", playerPawn.getActionPoints()),
-                25, Gdx.graphics.getHeight() - 25, 100,
-                Align.topLeft,
-                false);
+            // font.draw(
+            //     batch,
+            //     String.format("| Action Points = %d", playerPawn.getActionPoints()),
+            //     25, Gdx.graphics.getHeight() - 25, 100,
+            //     Align.topLeft,
+            //     false);
 
-            font.draw(
-                batch,
-                String.format("| Health = %d", playerPawn.getData().health),
-                25, Gdx.graphics.getHeight() - 50, 100,
-                Align.topLeft,
-                false);
+            // font.draw(
+            //     batch,
+            //     String.format("| Health = %d", playerPawn.getData().health),
+            //     25, Gdx.graphics.getHeight() - 50, 100,
+            //     Align.topLeft,
+            //     false);
 
             // Render turn information
             boolean myTurn = NetworkManager.isOffline();

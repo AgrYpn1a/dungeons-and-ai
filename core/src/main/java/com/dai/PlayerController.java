@@ -60,8 +60,9 @@ public final class PlayerController implements ITickable {
     private List<IndicatorEntity> cachedPathMarkers = new ArrayList<>();
 
     private ISearch search;
+
     private PlayerPawn myPlayerPawn;
-    private PlayerData playerData;
+    private PlayerPawn opponentPawn;
 
     /** Gameplay */
     private Vector2 target = null;
@@ -116,21 +117,29 @@ public final class PlayerController implements ITickable {
 
     public void init(PlayerPawn pawn, PlayerData playerData) {
         this.myPlayerPawn = pawn;
-        this.playerData = playerData;
+        // this.playerData = playerData;
 
         logger.info("Initialized with args (offline mode).");
     }
 
     public void setPlayerPawn(PlayerPawn pawn) {
-        this.myPlayerPawn = pawn;
+        myPlayerPawn = pawn;
 
         if(NetworkManager.isOffline()) {
             myPlayerPawn.consumeActionPoints(-Integer.MAX_VALUE);
         }
     }
 
+    public boolean hasPawn() { return myPlayerPawn != null; }
+
+    public void setOpponentPawn(PlayerPawn pawn) { opponentPawn = pawn; }
+
+    public PlayerPawn getPlayerPawn() { return myPlayerPawn; }
+
+    public PlayerPawn getOpponentPawn() { return opponentPawn; }
+
     public void setPlayerData(PlayerData playerData) {
-        this.playerData = playerData;
+        // this.playerData = playerData;
     }
 
     public void initNetworking(INetworkGameServer networkGame) throws Exception {
@@ -138,8 +147,6 @@ public final class PlayerController implements ITickable {
 
         this.networkGame = networkGame;
     }
-
-    public boolean hasPawn() { return myPlayerPawn != null; }
 
     @Override
     public void tick(float deltaTime) {
@@ -302,7 +309,5 @@ public final class PlayerController implements ITickable {
             logger.error(e.getMessage());
         }
     }
-
-    public PlayerPawn getPlayerPawn() { return myPlayerPawn; }
 
 }

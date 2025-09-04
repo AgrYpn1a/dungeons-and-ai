@@ -9,6 +9,7 @@ import java.util.UUID;
 import com.badlogic.gdx.math.Vector2;
 import com.dai.PlayerController;
 import com.dai.PlayerPawn;
+import com.dai.UIManager;
 import com.dai.world.Pawn.EPawnState;
 import com.dai.world.Pawn.PawnData;
 import com.dai.world.World;
@@ -58,6 +59,7 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
                 // Make sure network pawn is controlling pawn
                 netPawn.possessPawn(pawnPlayer);
                 PlayerController.getInstance().setPlayerPawn(pawnPlayer);
+                UIManager.getInstance().setPlayerPawn(pawnPlayer);
             } else {
                 // Initialise opponent
                 PlayerPawn pawnPlayer = new PlayerPawn(new PawnData(), location, true);
@@ -65,6 +67,8 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
 
                 // Make sure network pawn is controlling pawn
                 netPawn.possessPawn(pawnPlayer);
+                PlayerController.getInstance().setOpponentPawn(pawnPlayer);
+                UIManager.getInstance().setOpponentPawn(pawnPlayer);
             }
         } else {
             // TODO: Spawn NPC pawn

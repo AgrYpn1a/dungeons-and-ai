@@ -11,13 +11,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dai.PlayerController;
 import com.dai.PlayerPawn;
-import com.dai.UIManager;
 import com.dai.engine.Engine;
 import com.dai.engine.Engine.Layer;
 import com.dai.network.NetworkGameClient;
@@ -96,22 +93,9 @@ public final class GameScreen implements Screen {
 
         PlayerPawn playerPawn = PlayerController.getInstance().getPlayerPawn();
         if(playerPawn != null) {
-            // font.draw(
-            //     batch,
-            //     String.format("| Action Points = %d", playerPawn.getActionPoints()),
-            //     25, Gdx.graphics.getHeight() - 25, 100,
-            //     Align.topLeft,
-            //     false);
-
-            // font.draw(
-            //     batch,
-            //     String.format("| Health = %d", playerPawn.getData().health),
-            //     25, Gdx.graphics.getHeight() - 50, 100,
-            //     Align.topLeft,
-            //     false);
-
             // Render turn information
             boolean myTurn = NetworkManager.isOffline();
+
             try {
                 myTurn = NetworkGameServer.getInstance().isMyTurn(NetworkGameClient.getInstance().getId());
             } catch(Exception e) { /* TODO */ }
@@ -121,27 +105,15 @@ public final class GameScreen implements Screen {
             } else {
                 font.setColor(Color.RED);
             }
+
+            int width = myTurn ? 100 : 150;
             font.draw(
                 batch,
                 String.format("<TURN: %s", myTurn ? "My>" : "Opponnent's>"),
-                (Gdx.graphics.getWidth() - 100) / 2, Gdx.graphics.getHeight() - 15, 100,
+                (Gdx.graphics.getWidth() - width) / 2, Gdx.graphics.getHeight() - 15, width,
                 Align.top,
                 false);
         }
-
-        // font.draw(
-        //     batch,
-        //     "Mouse at (" + worldCoords.x + ", " + worldCoords.y + ")",
-        //     25, Gdx.graphics.getHeight() - 25, 100,
-        //     Align.topLeft,
-        //     false);
-
-        // font.draw(
-        //     batch,
-        //     "UIManager Mouse at (" + UIManager.getInstance().getMouseWorldPos().x + ", " + UIManager.getInstance().getMouseWorldPos().y + ")",
-        //      25, Gdx.graphics.getHeight() - 50, 100,
-        //     Align.topLeft,
-        //     false);
 
         batch.end();
     }

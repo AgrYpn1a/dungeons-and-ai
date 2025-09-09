@@ -1,17 +1,17 @@
 package com.dai;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.utils.Align;
 import com.dai.engine.Engine;
 import com.dai.engine.Engine.Layer;
 import com.dai.network.NetworkManager;
+import com.dai.ui.FloatingText;
 import com.dai.engine.Entity;
-import com.dai.engine.RenderComponent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +34,12 @@ public final class UIManager extends Entity {
     private Viewport viewport;
 
     private BitmapFont font;
-    // private SpriteBatch batch;
 
     private PlayerPawn playerPawn;
     private PlayerPawn opponentPawn;
+
+    private boolean showVictoryMessage = false;
+    private boolean showLoseMessage = false;
 
     @Override
     public boolean shouldRender() {
@@ -75,6 +77,8 @@ public final class UIManager extends Entity {
         mouseOnScreen = new Vector3();
     }
 
+    private FloatingText floatingText;
+
     @Override
     public void render(SpriteBatch batch, float deltaTime) {
         mouseOnScreen.x = Gdx.input.getX();
@@ -98,14 +102,6 @@ public final class UIManager extends Entity {
 
         /** Render opponent - may be null in offline-mode */
         if(opponentPawn != null) {
-            // Maybe hide action points
-            // font.draw(
-            //     batch,
-            //     String.format("Action Points = %d |", opponentPawn.getActionPoints()),
-            //     25, Gdx.graphics.getHeight() - 25, Gdx.graphics.getWidth() - 100,
-            //     Align.topRight,
-            //     false);
-
             font.draw(
                 batch,
                 String.format("| Health = %d |", opponentPawn.getData().health),
@@ -113,18 +109,52 @@ public final class UIManager extends Entity {
                 Align.topRight,
                 false);
         }
+
+        if(floatingText != null) {
+            floatingText.uiRender(batch, deltaTime);
+        }
+
+        if(showVictoryMessage) {
+            float scale = 1.5f;
+            float width = 250 * scale;
+            font.getData().setScale(scale);
+            font.setColor(Color.GREEN);
+            font.draw(
+                batch,
+                String.format("You dealt the final blow! Victory is ours!"),
+                (Gdx.graphics.getWidth() - width) / 2, Gdx.graphics.getHeight() - 50, width,
+                Align.top,
+                false);
+            font.setColor(Color.WHITE);
+            font.getData().setScale(1);
+        }
+
+        if(showLoseMessage) {
+            float scale = 1.5f;
+            float width = 120 * scale;
+            font.getData().setScale(scale);
+            font.setColor(Color.RED);
+            font.draw(
+                batch,
+                String.format("You died! Game over :("),
+                (Gdx.graphics.getWidth() - width) / 2, Gdx.graphics.getHeight() - 50, width,
+                Align.top,
+                false);
+            font.setColor(Color.WHITE);
+            font.getData().setScale(1);
+        }
     }
+
+    public void spawnFloatingText(String text, Color color) {
+        floatingText = new FloatingText(text, color);
+    }
+
+    public void displayVictoryMessage() { showVictoryMessage = true; }
+
+    public void displayLoseMessage() { showLoseMessage = true; }
 
     public Vector3 getMouseWorldPos() { return mouseInWorld; }
 
     public Vector3 getMouseScreenPos() { return mouseOnScreen; }
-
-    // public Vector3 getMousePos() {
-    //     return new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-    // }
-
-    // public Vector3 getMousePosInWorld() {
-    //     return new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-    // }
 
 }

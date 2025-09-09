@@ -5,7 +5,9 @@ import java.util.Queue;
 import java.util.function.Consumer;
 
 import com.badlogic.gdx.math.Vector2;
+import com.dai.UIManager;
 import com.dai.engine.Entity;
+import com.dai.network.NetworkGameServer;
 import com.dai.network.NetworkManager;
 
 public class Pawn extends Entity {
@@ -30,7 +32,7 @@ public class Pawn extends Entity {
 
     /** Movement mechanics */
     private float moveTime = 0.5f;
-    private float moveTick = 0f;
+    private float actionTick = 0f;
 
     public Pawn(PawnData data) {
         this.data = data;
@@ -44,10 +46,18 @@ public class Pawn extends Entity {
         if(state == EPawnState.Dead) {
             // TODO: Handle death!
         }
+
+        if(onStateChanged != null) {
+            onStateChanged.accept(state);
+        }
     }
 
     public void setData(PawnData data) {
         this.data = data;
+
+        if(onDataChanged != null) {
+            onDataChanged.accept(data);
+        }
     }
 
     public PawnData getData() { return this.data; }
@@ -65,27 +75,60 @@ public class Pawn extends Entity {
     //     return this.data.health <= 0;
     // }
 
+    public void doDamage(int damage) {
+        data.health -= damage;
+
+        /** Notify of changes */
+        onDataChanged.accept(data);
+    }
+
+
+    @Override
+    public boolean shouldRender() {
+        return state != EPawnState.Dead;
+    }
+
     @Override
     public void tick(float deltaTime) {
-        /** Movement mechanics */
-        if(path != null && !path.isEmpty()) {
-            if(moveTick >= moveTime) {
+        /** Process actions */
+        // boolean hasAuthority = NetworkManager.isServer() || NetworkManager.isOffline();
+        boolean hasAuthority = NetworkManager.isOffline();
+        if(hasAuthority && path != null && !path.isEmpty()) {
+            if(actionTick >= moveTime) {
 
-                // Move to position
-                moveTick = 0f;
-                Vector2 newPosition = path.poll();
-                setPosition(newPosition);
+                // Execute action
+                actionTick = 0f;
+                Vector2 targetPos = path.poll();
 
-                if(onPositionChanged != null) {
-                    onPositionChanged.accept(newPosition);
+                /** -> Attack */
+                Entity targetEntity = World.getInstance().getEntityAtPoint(targetPos);
+                Pawn targetPawn = (Pawn) targetEntity;
+                if(targetPawn != null) {
+                    // TODO: Maybe calculate damage in a different way
+                   int damage = 1 + (int)(Math.random() * 5);
+                   targetPawn.doDamage(damage);
+                   state = EPawnState.Ready;
+
+                   return;
                 }
 
+                /** -> TODO: Loot */
+
+                /** -> Move */
+                setPosition(targetPos);
+
+                /** Notify of changes */
+                if(onPositionChanged != null) {
+                    onPositionChanged.accept(targetPos);
+                }
+
+                /** End action processing */
                 if(path.isEmpty()) {
                     state = EPawnState.Ready;
                 }
             }
         }
 
-        moveTick += deltaTime;
+        actionTick += deltaTime;
     }
 }

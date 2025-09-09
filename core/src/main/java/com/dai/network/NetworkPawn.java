@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.util.UUID;
 
 import com.badlogic.gdx.math.Vector2;
+import com.dai.UIManager;
 import com.dai.world.Pawn;
 import com.dai.world.Pawn.EPawnState;
 import com.dai.world.Pawn.PawnData;
@@ -32,21 +33,6 @@ public final class NetworkPawn {
 
     public void possessPawn(Pawn possessedPawn) {
         this.possessedPawn = possessedPawn;
-
-        // Inject listeners
-        try {
-            INetworkGameServer server = NetworkGameServer.getInstance();
-            if(server.isServer()) {
-                // TODO: Should be registered on server only, investigate
-                // why isServer gives bad result here.
-                //
-                // this.possessedPawn.onPositionChanged = this::handlePositionChanged;
-                // this.possessedPawn.onStateChanged = this::handleStateChanged;
-                // this.possessedPawn.onDataChanged = this::handleDataChanged;
-            }
-        } catch(Exception e) {
-            System.out.println("[possessPawn] Error " + e.getMessage());
-        }
 
         this.possessedPawn.onPositionChanged = this::handlePositionChanged;
         this.possessedPawn.onStateChanged = this::handleStateChanged;

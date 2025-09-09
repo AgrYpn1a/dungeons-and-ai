@@ -159,9 +159,10 @@ public final class PlayerController implements ITickable {
             return;
         }
 
-        if(!NetworkManager.isServer()) {
+        if(NetworkManager.isOffline() || !NetworkManager.isServer()) {
             Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
             Tile tile = World.getInstance().getTileAtPoint(mousePos);
+
 
             // Render action indicator over an entity in the world
             if(tile != null) {
@@ -232,6 +233,8 @@ public final class PlayerController implements ITickable {
 
         logger.info("Processing MAIN_ACTION");
 
+        // UIManager.getInstance().spawnFloatingText("Test");
+
         Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
         Entity e = World.getInstance().getTileAtPoint(mousePos);
 
@@ -244,13 +247,14 @@ public final class PlayerController implements ITickable {
 
             renderPath();
 
+            target = e.getPosition();
+
             /** Confirm action */
             if(target != null && target.equals(e.getPosition())) {
                 myPlayerPawn.move(path);
-                // target = null;
+                target = null;
             }
 
-            target = e.getPosition();
         } else {
             try {
                 /** Confirm action */
@@ -268,6 +272,7 @@ public final class PlayerController implements ITickable {
                 /** Confirm action */
                 if(target != null && target.equals(e.getPosition())) {
                     networkGame.doAction(NetworkGameClient.getInstance().getPlayerId(), target);
+                    target = null;
                 } else {
                     // Update target
                     target = e.getPosition();

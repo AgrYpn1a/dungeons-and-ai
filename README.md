@@ -1,5 +1,7 @@
 # Dungeons and AI
 
+Gameplay [video](https://www.youtube.com/watch?v=5Vwz1Q-SAQg&ab_channel=AgrYpn1a).
+
 ## Project tools and versions
 The output of `java --version` below:
 ```

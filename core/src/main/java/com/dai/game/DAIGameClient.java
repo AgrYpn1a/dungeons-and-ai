@@ -117,6 +117,7 @@ public final class DAIGameClient extends DAIGameCore {
             World.getInstance().spawn(pawnPlayer, location);
 
             PlayerController.getInstance().setPlayerPawn(pawnPlayer);
+            UIManager.getInstance().setPlayerPawn(pawnPlayer);
         }
     }
 

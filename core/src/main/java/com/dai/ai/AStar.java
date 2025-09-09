@@ -28,7 +28,9 @@ public final class AStar implements ISearch {
             this.t = t;
         }
 
-        public float getTotalCost() { return (cost + heuristic) * this.t.getCostModifier(); }
+        // public float getTotalCost() { return (cost + heuristic) * this.t.getCostModifier(); }
+
+        public float getTotalCost() { return (cost + heuristic); }
 
         public ITraversable getTraversable() { return t; }
 
@@ -93,6 +95,8 @@ public final class AStar implements ISearch {
         startNode.parent = null;
 
         frontier.add(startNode);
+
+        System.out.println("findPath - from " + start + " to " + target + "startNode = " + startNode);
 
         while(!frontier.isEmpty() && !frontier.peek().equals(targetNode)) {
             Node currNode = frontier.poll();

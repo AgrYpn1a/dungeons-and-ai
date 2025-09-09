@@ -26,7 +26,7 @@ public class Tile extends Entity implements ITraversable, Serializable {
         public TileType type;
     }
 
-    private TileType type = TileType.Ground;
+    private TileType type;
     private RenderComponent renderer;
 
     public Tile(TextureRegion texture, Vector2 position) {
@@ -34,6 +34,8 @@ public class Tile extends Entity implements ITraversable, Serializable {
 
         transform.setPosition(position);
         renderer = this.AddComponent(new RenderComponent(texture));
+
+        type = TileType.Ground;
 
         // TODO
         // Disable rendering on server
@@ -68,6 +70,11 @@ public class Tile extends Entity implements ITraversable, Serializable {
 
     @Override
     public boolean isTraversable() {
+        // Entity targetEntity = World.getInstance().getEntityAtPoint(transform.getPosition());
+        // if(targetEntity != null) {
+        //     System.out.println("Is Traversable? Found an Entity -> " + targetEntity.toString());
+        // }
+
         return type == TileType.Ground || type == TileType.Moss;
     }
 
@@ -98,9 +105,10 @@ public class Tile extends Entity implements ITraversable, Serializable {
     }
 
     public void setType(TileType newType) {
+        type = newType;
+
         if(renderer != null) {
             renderer.setTexture(TextureManager.getInstance().getTile(newType));
-            type = newType;
         }
     }
 }

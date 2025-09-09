@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.dai.PlayerController;
 import com.dai.PlayerPawn;
@@ -58,6 +59,7 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
 
                 // Make sure network pawn is controlling pawn
                 netPawn.possessPawn(pawnPlayer);
+                netPawn.setOwnerId(playerId);
                 PlayerController.getInstance().setPlayerPawn(pawnPlayer);
                 UIManager.getInstance().setPlayerPawn(pawnPlayer);
             } else {
@@ -67,6 +69,7 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
 
                 // Make sure network pawn is controlling pawn
                 netPawn.possessPawn(pawnPlayer);
+                netPawn.setOwnerId(playerId);
                 PlayerController.getInstance().setOpponentPawn(pawnPlayer);
                 UIManager.getInstance().setOpponentPawn(pawnPlayer);
             }
@@ -97,11 +100,46 @@ public final class NetworkGameClient extends UnicastRemoteObject implements INet
     }
 
 	@Override
-    public void onPawnDataChange(UUID netPawnId, PawnData data) throws RemoteException {
+    public void onPawnDataChange(UUID netPawnId, PawnData newData) throws RemoteException {
         NetworkPawn netPawn = netPawns.stream()
             .filter(p -> p.getId().equals(netPawnId))
             .findFirst().get();
-        netPawn.getPossessedPawn().setData(data);
+
+        /** When my pawn's data has changed */
+        NetworkPawn myPawn = netPawns.stream()
+            .filter(np -> np.getOwnerId().equals(id))
+            .findFirst().get();
+
+        PawnData currData = netPawn.getPossessedPawn().getData();
+        int damage = Math.abs(newData.health - currData.health);
+        boolean hasDied = false;
+
+        if(newData.health <= 0) {
+            /** Death blow */
+            if(myPawn.getId().equals(netPawnId)) {
+                // UIManager.getInstance().spawnFloatingText(String.format("You died! Game over :(", damage), Color.RED);
+                UIManager.getInstance().displayLoseMessage();
+            } else {
+                /** When opponent's pawn data has changed */
+                // UIManager.getInstance().spawnFloatingText(String.format("You dealt final blow! Victory is ours!"), Color.GREEN);
+                UIManager.getInstance().displayVictoryMessage();
+            }
+
+            hasDied = true;
+        }
+
+        if(myPawn.getId().equals(netPawnId)) {
+            UIManager.getInstance().spawnFloatingText(String.format("-%d Hit", damage), Color.RED);
+        } else {
+            /** When opponent's pawn data has changed */
+            UIManager.getInstance().spawnFloatingText(String.format("+%d Hit", damage), Color.GREEN);
+        }
+
+        // Finally update the data
+        netPawn.getPossessedPawn().setData(newData);
+        if(hasDied) {
+            netPawn.getPossessedPawn().setState(EPawnState.Dead);
+        }
     }
 
     public void onPlayerPawnActionPointsChange(UUID netPawnId, int deltaPoints) throws RemoteException {

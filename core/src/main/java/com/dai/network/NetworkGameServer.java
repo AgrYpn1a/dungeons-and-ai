@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import com.badlogic.gdx.math.Vector2;
 import com.dai.PlayerPawn;
@@ -21,7 +22,9 @@ import com.dai.PlayerPawn.EPlayerActionResult;
 import com.dai.ai.AStar;
 import com.dai.ai.ISearch;
 import com.dai.common.Config;
+import com.dai.engine.Entity;
 import com.dai.server.GameMatch;
+import com.dai.world.Pawn;
 import com.dai.world.Pawn.EPawnState;
 import com.dai.world.Pawn.PawnData;
 import com.dai.world.World;
@@ -167,6 +170,8 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 
 	@Override
     public EPlayerActionResult doAction(UUID playerId, Vector2 target) throws RemoteException {
+		logger.info("doAction() called.");
+
 		/** Not current players turn */
 		if(!currentPlayer.equals(playerId)) {
 			return EPlayerActionResult.Failed;
@@ -175,27 +180,70 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 		Optional<NetworkPawn> pawn = netPawns.stream().filter(p -> p.getOwnerId().equals(playerId)).findFirst();
 		NetworkPawn netPawn = pawn.get();
 
+		/** Find path */
 		Queue<Vector2> path = requestPath(playerId, target);
+		// Queue<Vector2> finalPath = new LinkedList<>();
 
-		/** TODO: Possible actions: move, attack, loot */
+		if(path == null || (path != null && path.size() == 0)) {
+			return EPlayerActionResult.Failed;
+		}
 
-		/** Move */
+		// Stream<Entity> entities = World.getInstance().getEntities();
+		// entities.forEach(entity -> {
+		// 	logger.info(String.format("Found world entity at %s attempting at target %s", entity.getPosition(), target));
+		// });
+
+		/**
+		 *
+		 * We're observing target element and calculating possible actions
+		 * 1. Move
+		 * 2. Loot
+		 * 3. Attack
+		 *
+		 **/
+		Entity targetEntity = World.getInstance().getEntityAtPoint(target);
 		PlayerPawn playerPawn = (PlayerPawn) netPawn.getPossessedPawn();
-		int pathCost = World.getInstance().getPathCost(path);
 
-		// logger.info("Client " + playerId + " requested action of cost " + pathCost + "/" + playerPawn.getActionPoints());
+		logger.info("Requested action with: targetEntity = " + targetEntity);
 
-		if(playerPawn.consumeActionPoints(pathCost)) {
+		/** Movement */
+		if(targetEntity == null) {
+			int pathCost = World.getInstance().getPathCost(path);
 
-			// Notify of action points consumed
-			for(Map.Entry<UUID, INetworkGameClient> entry : clients.entrySet()) {
-				INetworkGameClient client = entry.getValue();
-				client.onPlayerPawnActionPointsChange(netPawn.getId(), pathCost);
+			logger.info("ACTION: Move");
+
+			if(playerPawn.consumeActionPoints(pathCost)) {
+				// Notify of action points consumed
+				for(Map.Entry<UUID, INetworkGameClient> entry : clients.entrySet()) {
+					INetworkGameClient client = entry.getValue();
+					client.onPlayerPawnActionPointsChange(netPawn.getId(), pathCost);
+				}
+
+				netPawn.getPossessedPawn().move(path);
+				return EPlayerActionResult.Success;
 			}
+		} else {
+			Pawn targetPawn = (Pawn) targetEntity;
 
-			netPawn.getPossessedPawn().move(path);
-			// logger.info("Client " + playerId + " pawn will move. Remaining points: " + playerPawn.getActionPoints());
-			return EPlayerActionResult.Success;
+			logger.info("ACTION: Attack");
+
+			/** Attack */
+			if(targetPawn != null) {
+				// Attack without movement
+				int attackCost = 2;
+				if(path.size() == 1 && playerPawn.consumeActionPoints(attackCost)) {
+					// Notify of action points consumed
+					for(Map.Entry<UUID, INetworkGameClient> entry : clients.entrySet()) {
+						INetworkGameClient client = entry.getValue();
+						client.onPlayerPawnActionPointsChange(netPawn.getId(), attackCost);
+					}
+
+					netPawn.getPossessedPawn().move(path);
+					return EPlayerActionResult.Success;
+				} else {
+					// Move first then attack
+				}
+			}
 		}
 
 		return EPlayerActionResult.NotEnoughActionPoints;
@@ -246,6 +294,8 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 		if(isPlayer) {
             PlayerPawn pawnPlayer = new PlayerPawn(new PawnData(), location, false);
 			pawnPlayer.setShouldRender(false);
+
+			World.getInstance().spawn(pawnPlayer, location);
 
 			netPawn.possessPawn(pawnPlayer);
 			netPawns.add(netPawn);
@@ -300,7 +350,7 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 				client.onPawnStateChange(netPawnId, newState);
 			}
 		} catch(Exception e) {
-			logger.error("[updatePawnPosition] " + e.getMessage());
+			logger.error("[updatePawnState] " + e.getMessage());
 		}
 	}
 
@@ -311,7 +361,7 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 				client.onPawnDataChange(netPawnId, newPawnData);
 			}
 		} catch(Exception e) {
-			logger.error("[updatePawnPosition] " + e.getMessage());
+			logger.error("[updatePawnData] " + e.getMessage());
 		}
 	}
 

@@ -80,6 +80,11 @@ public final class PlayerPawn extends Pawn {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return String.format("PlayerPawn");
+    }
+
     // public boolean (int cost) {
     //     return actionPoints
     // }

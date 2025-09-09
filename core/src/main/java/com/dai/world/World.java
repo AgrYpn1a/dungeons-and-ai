@@ -18,7 +18,12 @@ import com.dai.engine.Entity;
 import com.dai.world.Tile.TileData;
 import com.dai.world.Tile.TileType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class World {
+    private static final Logger logger = LoggerFactory.getLogger(World.class);
+
     public static World instance;
     public static World getInstance() {
         if(instance == null) {
@@ -124,10 +129,11 @@ public class World {
     }
 
     public Stream<Entity> getEntities() {
-        Stream<Entity> tiles = Arrays.stream(this.tiles).flatMap(Arrays::stream);
+        // Stream<Entity> tiles = Arrays.stream(this.tiles).flatMap(Arrays::stream);
         Stream<Entity> worldEntities = entities.values().stream();
+        return worldEntities;
 
-        return Stream.concat(tiles, worldEntities);
+        // return Stream.concat(tiles, worldEntities);
     }
 
     public Tile getTileAtPoint(Vector3 point) {
@@ -143,11 +149,22 @@ public class World {
         return tiles[y][x];
     }
 
-    public ITraversable getTraversableAtPoint(Vector2 point) {
-        Vector2 gridPos = toGridPos(new Vector3(point.x, point.y, 0));
+    public Tile getTileAtPoint(Vector2 point) {
+        int x = (int)point.x;
+        int y = (int)point.y;
 
-        int x = (int)gridPos.x;
-        int y = (int)gridPos.y;
+        if(y >= tiles.length || x >= tiles[0].length || y < 0 || x < 0) {
+            return null;
+        }
+
+        return tiles[y][x];
+    }
+
+    public ITraversable getTraversableAtPoint(Vector2 point) {
+        // Vector2 gridPos = toGridPos(new Vector3(point.x, point.y, 0));
+
+        int x = (int)point.x;
+        int y = (int)point.y;
 
         if(y >= tiles.length || x >= tiles[0].length || y < 0 || x < 0) {
             return null;
@@ -156,18 +173,28 @@ public class World {
         return (ITraversable)tiles[y][x];
     }
 
-    // public Entity getEntityAtPoint(Vector3 point) {
-    //     Vector2 gridPos = toGridPos(point);
+    // TODO: Should we maybe sync the whole entities map?
+    public Entity getEntityAtPoint(Vector3 point) {
+        Vector2 v2Pos = new Vector2(point.x, point.y);
 
-    //     int x = (int)gridPos.x;
-    //     int y = (int)gridPos.y;
+        for(Entity e : entities.values()) {
+            if(e.getPosition().equals(v2Pos)) {
+                return e;
+            }
+        }
 
-    //     if(y >= tiles.length || x >= tiles[0].length || y < 0 || x < 0) {
-    //         return null;
-    //     }
+        return null;
+    }
 
-    //     return tiles[y][x];
-    // }
+    public Entity getEntityAtPoint(Vector2 point) {
+        for(Entity e : entities.values()) {
+            if(e.getPosition().equals(point)) {
+                return e;
+            }
+        }
+
+        return null;
+    }
 
     public List<ITraversable> getNeighbours(ITraversable node) {
         List<ITraversable> neighbours = new LinkedList<>();
@@ -217,8 +244,15 @@ public class World {
         int cost = 0;
 
         for(Vector2 pos : path) {
-            ITraversable t = (ITraversable) getTileAtPoint(new Vector3(pos.x, pos.y, 0));
+            Tile t = getTileAtPoint(pos);
             int currCost = 1 * t.getCostModifier();
+            logger.info(
+                        String.format("Tile at %s (%s) of type %s with cost %d",
+                                      pos,
+                                      t.getPosition(),
+                                      t.getTileData().type,
+                                      t.getCostModifier())
+            );
             cost += currCost;
         }
 
@@ -250,6 +284,7 @@ public class World {
                 }
 
                 tiles[y][x] = tile;
+                logger.info("Imported tile of type " + tile.getTileData().type);
             }
         }
 

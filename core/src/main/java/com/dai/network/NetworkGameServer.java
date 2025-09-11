@@ -170,8 +170,6 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 
 	@Override
     public EPlayerActionResult doAction(UUID playerId, Vector2 target) throws RemoteException {
-		logger.info("doAction() called.");
-
 		/** Not current players turn */
 		if(!currentPlayer.equals(playerId)) {
 			return EPlayerActionResult.Failed;
@@ -182,16 +180,10 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 
 		/** Find path */
 		Queue<Vector2> path = requestPath(playerId, target);
-		// Queue<Vector2> finalPath = new LinkedList<>();
 
 		if(path == null || (path != null && path.size() == 0)) {
 			return EPlayerActionResult.Failed;
 		}
-
-		// Stream<Entity> entities = World.getInstance().getEntities();
-		// entities.forEach(entity -> {
-		// 	logger.info(String.format("Found world entity at %s attempting at target %s", entity.getPosition(), target));
-		// });
 
 		/**
 		 *
@@ -204,13 +196,9 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 		Entity targetEntity = World.getInstance().getEntityAtPoint(target);
 		PlayerPawn playerPawn = (PlayerPawn) netPawn.getPossessedPawn();
 
-		logger.info("Requested action with: targetEntity = " + targetEntity);
-
 		/** Movement */
 		if(targetEntity == null) {
 			int pathCost = World.getInstance().getPathCost(path);
-
-			logger.info("ACTION: Move");
 
 			if(playerPawn.consumeActionPoints(pathCost)) {
 				// Notify of action points consumed
@@ -224,8 +212,6 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 			}
 		} else {
 			Pawn targetPawn = (Pawn) targetEntity;
-
-			logger.info("ACTION: Attack");
 
 			/** Attack */
 			if(targetPawn != null) {
@@ -241,7 +227,7 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 					netPawn.getPossessedPawn().move(path);
 					return EPlayerActionResult.Success;
 				} else {
-					// Move first then attack
+					// TODO: Move first then attack
 				}
 			}
 		}
@@ -299,9 +285,6 @@ public final class NetworkGameServer extends UnicastRemoteObject implements INet
 
 			netPawn.possessPawn(pawnPlayer);
 			netPawns.add(netPawn);
-
-			// Spawn player in the world
-            // World.getInstance().spawn(pawnPlayer, location);
 
 			try {
 				for(Map.Entry<UUID, INetworkGameClient> entry : clients.entrySet()) {

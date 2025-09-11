@@ -5,23 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-import com.dai.world.World;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public final class Engine {
-    private static final Logger logger = LoggerFactory.getLogger(Engine.class);
-
     private static Engine instance;
-
     public static Engine getInstance() {
         if(instance == null) {
             instance = new Engine();
@@ -37,8 +26,8 @@ public final class Engine {
         UI
     }
 
-    private final Map<Layer, Optional<Viewport>> layerViewports;
-    private final Map<Layer, ArrayList<Entity>> layerEntities;
+    private Map<Layer, Optional<Viewport>> layerViewports;
+    private Map<Layer, ArrayList<Entity>> layerEntities;
 
     private ArrayList<ITickable> tickables;
 
@@ -91,7 +80,6 @@ public final class Engine {
             Layer layer = layers[i];
             Optional<Viewport> viewport = layerViewports.get(layer);
             List<Entity> entities = layerEntities.get(layer);
-            // logger.info("Rendering entities from  " + layer + " # " + entities.size());
 
             if(viewport.get() != null && entities.size() > 0) {
                 viewport.get().apply();
@@ -117,16 +105,6 @@ public final class Engine {
         layerViewports.put(layer, Optional.of(viewport));
     }
 
-    public void registerEntity(Layer layer, Entity entity) {
-        layerEntities.get(layer).add(entity);
-        tickables.add(entity);
-    }
-
-    public void destroyEntity(Layer layer, Entity entity) {
-        // TODO: Need to add queue for destroying entities
-        layerEntities.get(layer).remove(entity);
-        tickables.remove(entity);
-    }
 
     public void registerTickable(ITickable t) {
         tickables.add(t);
@@ -134,5 +112,23 @@ public final class Engine {
 
     public Optional<Viewport> getLayerViewport(Layer layer) {
         return layerViewports.get(layer);
+    }
+
+    /**
+     * Use this method to register new entity.
+     *
+     * @param layer
+     * @param entity
+    */
+    public synchronized void registerEntity(Layer layer, Entity entity) {
+        // TODO: Do we need queue for adding entites here as well?
+        layerEntities.get(layer).add(entity);
+        tickables.add(entity);
+    }
+
+    public synchronized void destroyEntity(Layer layer, Entity entity) {
+        // TODO: Need to add queue for destroying entities
+        layerEntities.get(layer).remove(entity);
+        tickables.remove(entity);
     }
 }

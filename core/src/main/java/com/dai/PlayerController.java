@@ -1,8 +1,6 @@
 package com.dai;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -26,7 +24,6 @@ import com.dai.world.Tile;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -160,9 +157,8 @@ public final class PlayerController implements ITickable {
         }
 
         if(NetworkManager.isOffline() || !NetworkManager.isServer()) {
-            Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
-            Tile tile = World.getInstance().getTileAtPoint(mousePos);
-
+            Vector3 mouseInWorld = UIManager.getInstance().getMouseWorldPos();
+            Tile tile = World.getInstance().getTileAtPoint(World.worldToGrid(mouseInWorld));
 
             // Render action indicator over an entity in the world
             if(tile != null) {
@@ -189,6 +185,10 @@ public final class PlayerController implements ITickable {
 
     /** Renders current path */
     private void renderPath() {
+        if(path == null) {
+            return;
+        }
+
         // Make sure we have enough markers
         while(cachedPathMarkers.size() < path.size()) {
             cachedPathMarkers.add(pathMarkerPool.borrowFrom());
@@ -222,21 +222,17 @@ public final class PlayerController implements ITickable {
         }
     }
 
-    /** ====================
-     *  Processing actions
-     *  ====================
-     *  */
+    /* ====================
+     * Processing actions
+     * ====================
+     **/
     public void processMainAction(Vector3 screenMousePos) {
         if(!canDoAction()) {
             return;
         }
 
-        logger.info("Processing MAIN_ACTION");
-
-        // UIManager.getInstance().spawnFloatingText("Test");
-
-        Vector3 mousePos = UIManager.getInstance().getMouseWorldPos();
-        Entity e = World.getInstance().getTileAtPoint(mousePos);
+        Vector3 mouseInWorld = UIManager.getInstance().getMouseWorldPos();
+        Entity e = World.getInstance().getTileAtPoint(World.worldToGrid(mouseInWorld));
 
         if(NetworkManager.isOffline()) {
             int playerX = (int) myPlayerPawn.getPosition().x;
@@ -247,24 +243,15 @@ public final class PlayerController implements ITickable {
 
             renderPath();
 
-            target = e.getPosition();
-
             /** Confirm action */
             if(target != null && target.equals(e.getPosition())) {
                 myPlayerPawn.move(path);
                 target = null;
+            } else {
+                target = e.getPosition();
             }
-
         } else {
             try {
-                /** Confirm action */
-                // if(target != null && path.contains(e.getPosition())) {
-                //     // TODO
-                //     logger.info("Action confirmed.");
-                //     networkGame.doAction(NetworkGameClient.getInstance().getPlayerId(), target);
-                //     return;
-                // }
-
                 path = networkGame.requestPath(NetworkGameClient.getInstance().getPlayerId(), e.getPosition());
 
                 renderPath();
@@ -281,28 +268,6 @@ public final class PlayerController implements ITickable {
                 logger.error("Error communicating with NetworkGame: " + err.getMessage());
             }
         }
-
-
-
-        // // Make sure we have enough markers
-        // while(cachedPathMarkers.size() < path.size()) {
-        //     cachedPathMarkers.add(pathMarkerPool.borrowFrom());
-        // }
-
-        // // Clear old path
-        // for(Entity marker : cachedPathMarkers) {
-        //     marker.setShouldRender(false);
-        // }
-
-        // logger.info(">>> Found path <<<");
-        // int i = 0;
-        // for(ITraversable t : path) {
-        //     cachedPathMarkers.get(i).setPosition(t.getPosition());
-        //     cachedPathMarkers.get(i).setShouldRender(true);
-        //     i++;
-        // }
-
-        // myPlayerPawn.move(path);
     }
 
     public void processEndTurn(Integer keycode) {

@@ -109,22 +109,6 @@ public final class GameMatch extends Thread {
     public EGameState getGameState() { return this.state; }
 
     private void startMatch() throws RemoteException {
-        /** 1. Create players and send to clients */
-        /** 2.  */
-        // PlayerData p1Data = new PlayerData();
-        // PlayerData p2Data = new PlayerData();
-
-        // p1Data.id = UUID.randomUUID();
-        // p1Data.name = "Eldritch Wanderer";
-        // p1Data.spawnPos = new Vector2(0, 0);
-
-        // p2Data.id = UUID.randomUUID();
-        // p2Data.name = "Fire Conjurer";
-        // p2Data.spawnPos = new Vector2(World.WORLD_SIZE - 1, World.WORLD_SIZE - 1);
-
-        // Engine.getInstance().init();
-        // World.getInstance().init();
-
         MatchPlayer p1 = players.get(0);
         MatchPlayer p2 = players.get(1);
 
@@ -134,57 +118,13 @@ public final class GameMatch extends Thread {
         netGameServer = (NetworkGameServer) NetworkGameServer.getInstance();
         registry.rebind(NetworkGameServer.class.getSimpleName(), netGameServer);
 
-        logger.info("Registry created " +  registry.toString());
-        logger.info("Bind " +  NetworkGameServer.class.getSimpleName() + " to NetworkGame object " + netGameServer.toString());
-
-        /** Initialise player network pawns */
-        // networkGame.addNetworkPlayerPawn(new NetworkPawn(p1Data.id));
-        // networkGame.addNetworkPlayerPawn(new NetworkPawn(p2Data.id));
-
-
         try {
-        //     p1.out.writeByte(EDAIProtocol.SpawnPlayer.value);
-        //     p1.out.writeObject(p1Data);
-        //     p1.out.flush();
-
-        //     p1.out.writeByte(EDAIProtocol.SpawnEnemy.value);
-        //     p1.out.writeObject(p2Data);
-        //     p1.out.flush();
-
-        //     p2.out.writeByte(EDAIProtocol.SpawnPlayer.value);
-        //     p2.out.writeObject(p2Data);
-        //     p2.out.flush();
-
-        //     p2.out.writeByte(EDAIProtocol.SpawnEnemy.value);
-        //     p2.out.writeObject(p1Data);
-        //     p2.out.flush();
-
             // Notify both players of connection
             p1.out.writeByte(EDAIProtocol.Connected.value);
             p1.out.flush();
 
             p2.out.writeByte(EDAIProtocol.Connected.value);
             p2.out.flush();
-
-            // UUID player1Id = UUID.randomUUID();
-            // PawnData p1Data = new PawnData();
-            // p1Data.health = 10;
-
-            // UUID player2Id = UUID.randomUUID();
-            // PawnData p2Data = new PawnData();
-            // p2Data.health = 10;
-
-            // netGameServer.waitUntilClientsAreConnected();
-            // logger.info("Spawning players...");
-
-            // netGameServer.spawnPawn(
-            //                 new NetworkPawn(player1Id, p1Data),
-            //                 new Vector2(0, 0),
-            //                 true);
-            // netGameServer.spawnPawn(
-            //                 new NetworkPawn(player2Id, p2Data),
-            //                 new Vector2(World.WORLD_SIZE - 1, World.WORLD_SIZE - 1),
-            //                 true);
         } catch(Exception e) { logger.error(e.getMessage()); }
 
         state = EGameState.InProgress;

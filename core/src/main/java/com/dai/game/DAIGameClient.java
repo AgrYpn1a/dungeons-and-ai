@@ -159,20 +159,10 @@ public final class DAIGameClient extends DAIGameCore {
     private void handleMessage(NetworkData nData) {
         EDAIProtocol message = nData.type;
         logger.info("[handleMessage] -> Got " + message);
-        System.out.println("[handleMessage] -> Got " + message);
 
         /** This should be the first message coming from the server */
         if(message == EDAIProtocol.Connected) {
             try {
-
-                // Connect to registry
-                // registry = LocateRegistry.getRegistry( 16000);
-                // logger.info(registry.toString());
-
-                // Get remote NetworkGame
-                // netGameServer = (INetworkGameServer) registry.lookup(NetworkGameServer.class.getSimpleName());
-
-                logger.info("[EDAIProtocol.Connected] -> Trying to get NetworkGameServer and NetworkGameClient instances.");
                 netGameServer = NetworkGameServer.getInstance();
                 netGameClient = NetworkGameClient.getInstance();
 

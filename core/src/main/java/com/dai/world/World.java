@@ -129,24 +129,8 @@ public class World {
     }
 
     public Stream<Entity> getEntities() {
-        // Stream<Entity> tiles = Arrays.stream(this.tiles).flatMap(Arrays::stream);
         Stream<Entity> worldEntities = entities.values().stream();
         return worldEntities;
-
-        // return Stream.concat(tiles, worldEntities);
-    }
-
-    public Tile getTileAtPoint(Vector3 point) {
-        Vector2 gridPos = toGridPos(point);
-
-        int x = (int)gridPos.x;
-        int y = (int)gridPos.y;
-
-        if(y >= tiles.length || x >= tiles[0].length || y < 0 || x < 0) {
-            return null;
-        }
-
-        return tiles[y][x];
     }
 
     public Tile getTileAtPoint(Vector2 point) {
@@ -229,36 +213,31 @@ public class World {
         entities.put(pos, e);
     }
 
-    public static Vector2 toWorldPos(Vector2 pos) {
-        return new Vector2(pos.x * TILE_SIZE, pos.y * TILE_SIZE);
-    }
-
-    public static Vector2 toGridPos(Vector3 point) {
-        int x = Math.round((point.x - TILE_SIZE / 2) / TILE_SIZE);
-        int y = Math.round((point.y - TILE_SIZE / 2) / TILE_SIZE);
-
-        return new Vector2(x, y);
-    }
-
     public int getPathCost(Queue<Vector2> path) {
         int cost = 0;
 
         for(Vector2 pos : path) {
             Tile t = getTileAtPoint(pos);
             int currCost = 1 * t.getCostModifier();
-            logger.info(
-                        String.format("Tile at %s (%s) of type %s with cost %d",
-                                      pos,
-                                      t.getPosition(),
-                                      t.getTileData().type,
-                                      t.getCostModifier())
-            );
             cost += currCost;
         }
 
         return cost;
     }
 
+    /** Coordinates */
+    public static Vector2 toWorldPos(Vector2 pos) {
+        return new Vector2(pos.x * TILE_SIZE, pos.y * TILE_SIZE);
+    }
+
+    public static Vector2 worldToGrid(Vector3 point) {
+        int x = Math.round((point.x - TILE_SIZE / 2) / TILE_SIZE);
+        int y = Math.round((point.y - TILE_SIZE / 2) / TILE_SIZE);
+
+        return new Vector2(x, y);
+    }
+
+    /** World data sharing */
     public TileData[][] exportWorld() {
         TileData[][] data = new TileData[tiles.length][tiles[0].length];
 
@@ -284,7 +263,6 @@ public class World {
                 }
 
                 tiles[y][x] = tile;
-                logger.info("Imported tile of type " + tile.getTileData().type);
             }
         }
 
